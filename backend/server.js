@@ -104,7 +104,14 @@ app.post("/api/run-php", async (req, res) => {
       }
 
       console.log(`✅ Execution successful`);
-      res.json({ output: stdout });
+
+      // Détecter si la sortie contient du HTML
+      const isHtml = /<\s*([a-z][a-z0-9]*)\b[^>]*>/i.test(stdout);
+
+      res.json({
+        output: stdout,
+        isHtml: isHtml,
+      });
     });
   } catch (err) {
     // En cas d'erreur d'écriture ou autre
