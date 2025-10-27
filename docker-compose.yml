@@ -1,0 +1,74 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules   # <-- garde les node_modules de l'image
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    command: npm run dev -- --host
+
+  backend:
+    build: ./backend
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/monapp
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./sandbox:/app/sandbox
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      db:
+        condition: service_started
+      php-sandbox:
+        condition: service_healthy
+    networks:
+      - app-network
+    user: "1000:0"
+
+  php-sandbox:
+    image: php:8.2-cli
+    container_name: php_sandbox
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./sandbox:/sandbox
+    command: tail -f /dev/null
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "php", "-v"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: monapp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
+
+networks:
+  app-network:
+    driver: bridge
+
