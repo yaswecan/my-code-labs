@@ -1,9 +1,9 @@
 import { useState } from "react";
 import MultiFileEditor from "./MultiFileEditor.jsx";
-import ExerciseMode from "./ExerciseMode.jsx";
+import ThemeView from "./ThemeView.jsx";
 
 function App() {
-  const [mode, setMode] = useState("editor"); // "editor" or "exercises"
+  const [mode, setMode] = useState("editor"); // "editor", "themes", or "exercises"
 
   return (
     <div className="App h-screen overflow-hidden">
@@ -22,21 +22,21 @@ function App() {
             Éditeur PHP
           </button>
           <button
-            onClick={() => setMode("exercises")}
+            onClick={() => setMode("themes")}
             className={`px-4 py-2 rounded ${
-              mode === "exercises"
+              mode === "themes"
                 ? "bg-green-600 hover:bg-green-700"
                 : "bg-gray-600 hover:bg-gray-700"
             }`}
           >
-            Mode Exercices
+            Thèmes d'Apprentissage
           </button>
         </div>
       </div>
 
       {/* Content */}
       <div className="h-[calc(100vh-80px)]">
-        {mode === "editor" ? <MultiFileEditor /> : <ExerciseMode />}
+        {mode === "editor" ? <MultiFileEditor /> : <ThemeView />}
       </div>
     </div>
   );

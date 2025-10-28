@@ -1,98 +1,221 @@
-[
-  {
-    "id": "hello-world",
-    "title": "Hello World",
-    "description": "Créez une page PHP qui affiche 'Hello World!'",
-    "difficulty": "beginner",
-    "category": "basics",
-    "instructions": "Écrivez un script PHP qui affiche le message 'Hello World!' à l'écran.",
-    "initialCode": "<?php\n// Votre code ici\n?>",
-    "expectedOutput": "Hello World!",
-    "testType": "output",
-    "hints": [
-      "Utilisez la fonction echo pour afficher du texte",
-      "N'oubliez pas le point-virgule à la fin de la ligne"
-    ]
-  },
-  {
-    "id": "variables-numbers",
-    "title": "Variables et Nombres",
-    "description": "Créez un script qui utilise des variables pour calculer et afficher des nombres",
-    "difficulty": "beginner",
-    "category": "variables",
-    "instructions": "Déclarez deux variables avec des nombres, additionnez-les et affichez le résultat.",
-    "initialCode": "<?php\n// Déclarez vos variables ici\n\n// Calculez la somme\n\n// Affichez le résultat\n?>",
-    "expectedOutput": "15",
-    "testType": "output",
-    "hints": [
-      "Utilisez $ pour déclarer une variable",
-      "L'opérateur + permet d'additionner",
-      "echo affiche le contenu d'une variable"
-    ]
-  },
-  {
-    "id": "html-css-js",
-    "title": "Page Web Complète",
-    "description": "Créez une page web avec HTML, CSS et JavaScript",
-    "difficulty": "intermediate",
-    "category": "web",
-    "instructions": "Créez une page HTML avec du CSS pour le style et du JavaScript pour l'interactivité. La page doit contenir un bouton qui change de couleur au clic.",
-    "files": [
-      {
-        "name": "index.php",
-        "content": "<?php\n// Code PHP si nécessaire\n?>\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Ma Page Web</title>\n  <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n  <h1>Ma Page Interactive</h1>\n  <button id=\"colorButton\">Cliquez-moi</button>\n  <script src=\"script.js\"></script>\n</body>\n</html>"
-      },
-      {
-        "name": "style.css",
-        "content": "body {\n  font-family: Arial, sans-serif;\n  text-align: center;\n  padding: 50px;\n}\n\nh1 {\n  color: #333;\n}\n\n#colorButton {\n  padding: 10px 20px;\n  font-size: 16px;\n  background-color: #4CAF50;\n  color: white;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n}\n\n#colorButton:hover {\n  background-color: #45a049;\n}"
-      },
-      {
-        "name": "script.js",
-        "content": "// Votre code JavaScript ici\ndocument.getElementById('colorButton').addEventListener('click', function() {\n  // Changez la couleur du bouton\n});"
-      }
-    ],
-    "testType": "interactive",
-    "testCriteria": {
-      "buttonExists": true,
-      "buttonClickable": true,
-      "colorChanges": true
-    },
-    "hints": [
-      "Utilisez document.getElementById() pour accéder au bouton",
-      "addEventListener('click', ...) pour détecter les clics",
-      "style.backgroundColor pour changer la couleur"
-    ]
-  },
-  {
-    "id": "php-functions",
-    "title": "Fonctions PHP",
-    "description": "Créez et utilisez des fonctions PHP",
-    "difficulty": "intermediate",
-    "category": "functions",
-    "instructions": "Créez une fonction qui calcule le carré d'un nombre et utilisez-la pour afficher le carré de 5.",
-    "initialCode": "<?php\n// Déclarez votre fonction ici\n\nfunction square($number) {\n  // Retournez le carré du nombre\n}\n\n// Utilisez la fonction\n$result = square(5);\necho $result;\n?>",
-    "expectedOutput": "25",
-    "testType": "output",
-    "hints": [
-      "Les fonctions se déclarent avec le mot-clé function",
-      "return permet de retourner une valeur",
-      "Appelez la fonction avec son nom suivi de parenthèses"
-    ]
-  },
-  {
-    "id": "arrays-loops",
-    "title": "Tableaux et Boucles",
-    "description": "Utilisez des tableaux et des boucles en PHP",
-    "difficulty": "intermediate",
-    "category": "arrays",
-    "instructions": "Créez un tableau de nombres et utilisez une boucle pour afficher chaque nombre multiplié par 2.",
-    "initialCode": "<?php\n// Créez un tableau de nombres\n$numbers = array(1, 2, 3, 4, 5);\n\n// Utilisez une boucle pour afficher chaque nombre * 2\nforeach ($numbers as $number) {\n  echo ($number * 2) . \" \";\n}\n?>",
-    "expectedOutput": "2 4 6 8 10",
-    "testType": "output",
-    "hints": [
-      "array() crée un tableau",
-      "foreach parcourt les éléments du tableau",
-      "L'opérateur * permet la multiplication"
-    ]
-  }
-]
+{
+  "themes": [
+    {
+      "id": "first-steps",
+      "title": "Faites vos premiers pas en PHP",
+      "description": "Découvrez les bases du langage PHP et apprenez à créer vos premiers scripts",
+      "parts": [
+        {
+          "id": "part1",
+          "title": "Découvrez le fonctionnement d'un site écrit en PHP",
+          "description": "Comprenez comment PHP fonctionne dans un environnement web",
+          "order": 1,
+          "content": [
+            {
+              "type": "lesson",
+              "id": "php-introduction",
+              "title": "Qu'est-ce que PHP ?",
+              "content": "PHP est un langage de programmation côté serveur qui permet de créer des pages web dynamiques. Contrairement au HTML qui est statique, PHP permet de générer du contenu dynamique en fonction des actions de l'utilisateur ou des données stockées.",
+              "question": "Quelle est la principale différence entre HTML et PHP ?",
+              "options": [
+                "HTML est un langage de programmation, PHP est un langage de balisage",
+                "HTML est statique, PHP permet de générer du contenu dynamique",
+                "PHP s'exécute côté client, HTML côté serveur",
+                "HTML utilise des balises, PHP utilise des fonctions"
+              ],
+              "correctAnswer": 1,
+              "testType": "mcq"
+            },
+            {
+              "type": "exercise",
+              "id": "hello-world",
+              "title": "Hello World",
+              "description": "Créez une page PHP qui affiche 'Hello World!'",
+              "difficulty": "beginner",
+              "category": "basics",
+              "instructions": "Écrivez un script PHP qui affiche le message 'Hello World!' à l'écran.",
+              "initialCode": "<?php\n// Votre code ici\n?>",
+              "expectedOutput": "Hello World!",
+              "testType": "output",
+              "hints": [
+                "Utilisez la fonction echo pour afficher du texte",
+                "N'oubliez pas le point-virgule à la fin de la ligne"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "part2",
+          "title": "Préparez votre environnement de travail",
+          "description": "Configurez votre environnement de développement PHP",
+          "order": 3,
+          "content": [
+            {
+              "type": "lesson",
+              "id": "variables-basics",
+              "title": "Les Variables en PHP",
+              "content": "En PHP, les variables sont représentées par un signe dollar ($) suivi du nom de la variable. Le nom est sensible à la casse. Une variable peut contenir différents types de données : chaînes de caractères, nombres, tableaux, etc.",
+              "question": "Comment déclare-t-on une variable en PHP ?",
+              "options": [
+                "En utilisant le mot-clé var suivi du nom",
+                "En utilisant le symbole $ suivi du nom de la variable",
+                "En utilisant le mot-clé variable suivi du nom",
+                "En utilisant le symbole @ suivi du nom de la variable"
+              ],
+              "correctAnswer": 1,
+              "testType": "mcq"
+            },
+            {
+              "type": "exercise",
+              "id": "variables-numbers",
+              "title": "Variables et Nombres",
+              "description": "Créez un script qui utilise des variables pour calculer et afficher des nombres",
+              "difficulty": "beginner",
+              "category": "variables",
+              "instructions": "Déclarez deux variables avec des nombres, additionnez-les et affichez le résultat.",
+              "initialCode": "<?php\n// Déclarez vos variables ici\n\n// Calculez la somme\n\n// Affichez le résultat\n?>",
+              "expectedOutput": "15",
+              "testType": "output",
+              "hints": [
+                "Utilisez $ pour déclarer une variable",
+                "L'opérateur + permet d'additionner",
+                "echo affiche le contenu d'une variable"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "part3",
+          "title": "Écrivez votre premier script",
+          "description": "Créez votre premier programme PHP fonctionnel",
+          "order": 4,
+          "content": [
+            {
+              "type": "lesson",
+              "id": "functions-basics",
+              "title": "Les Fonctions en PHP",
+              "content": "Une fonction est un bloc de code réutilisable qui effectue une tâche spécifique. En PHP, les fonctions sont déclarées avec le mot-clé 'function' suivi du nom de la fonction et de parenthèses. Elles peuvent recevoir des paramètres et retourner une valeur avec 'return'.",
+              "question": "Quel mot-clé utilise-t-on pour déclarer une fonction en PHP ?",
+              "options": [
+                "def",
+                "function",
+                "func",
+                "method"
+              ],
+              "correctAnswer": 1,
+              "testType": "mcq"
+            },
+            {
+              "type": "exercise",
+              "id": "php-functions",
+              "title": "Fonctions PHP",
+              "description": "Créez et utilisez des fonctions PHP",
+              "difficulty": "intermediate",
+              "category": "functions",
+              "instructions": "Créez une fonction qui calcule le carré d'un nombre et utilisez-la pour afficher le carré de 5.",
+              "initialCode": "<?php\n// Déclarez votre fonction ici\n\nfunction square($number) {\n  // Retournez le carré du nombre\n}\n\n// Utilisez la fonction\n$result = square(5);\necho $result;\n?>",
+              "expectedOutput": "25",
+              "testType": "output",
+              "hints": [
+                "Les fonctions se déclarent avec le mot-clé function",
+                "return permet de retourner une valeur",
+                "Appelez la fonction avec son nom suivi de parenthèses"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "part4",
+          "title": "Configurez PHP pour visualiser les erreurs",
+          "description": "Apprenez à gérer et afficher les erreurs PHP",
+          "order": 5,
+          "content": [
+            {
+              "type": "lesson",
+              "id": "arrays-loops",
+              "title": "Tableaux et Boucles",
+              "content": "Les tableaux en PHP permettent de stocker plusieurs valeurs dans une seule variable. Les boucles (foreach, for, while) permettent de parcourir ces tableaux et d'exécuter du code de manière répétitive. La boucle foreach est particulièrement utile pour parcourir les tableaux.",
+              "question": "Quelle boucle est la plus appropriée pour parcourir un tableau en PHP ?",
+              "answer": "foreach",
+              "testType": "text"
+            },
+            {
+              "type": "exercise",
+              "id": "arrays-loops",
+              "title": "Tableaux et Boucles",
+              "description": "Utilisez des tableaux et des boucles en PHP",
+              "difficulty": "intermediate",
+              "category": "arrays",
+              "instructions": "Créez un tableau de nombres et utilisez une boucle pour afficher chaque nombre multiplié par 2.",
+              "initialCode": "<?php\n// Créez un tableau de nombres\n$numbers = array(1, 2, 3, 4, 5);\n\n// Utilisez une boucle pour afficher chaque nombre * 2\nforeach ($numbers as $number) {\n  echo ($number * 2) . \" \";\n}\n?>",
+              "expectedOutput": "2 4 6 8 10",
+              "testType": "output",
+              "hints": [
+                "array() crée un tableau",
+                "foreach parcourt les éléments du tableau",
+                "L'opérateur * permet la multiplication"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quiz1",
+          "title": "Quiz : Faire ses premiers pas en PHP",
+          "description": "Testez vos connaissances sur les bases de PHP",
+          "order": 6,
+          "content": [
+            {
+              "type": "lesson",
+              "id": "web-integration",
+              "title": "Intégration Web avec HTML, CSS et JavaScript",
+              "content": "PHP peut être intégré dans des pages HTML pour créer des applications web complètes. Vous pouvez mélanger PHP avec HTML, CSS pour le style, et JavaScript pour l'interactivité côté client. Les fichiers PHP ont généralement l'extension .php et peuvent contenir à la fois du code PHP et du HTML.",
+              "question": "Quelle extension de fichier utilise-t-on généralement pour les fichiers PHP ?",
+              "options": [
+                ".html",
+                ".php",
+                ".js",
+                ".css"
+              ],
+              "correctAnswer": 1,
+              "testType": "mcq"
+            },
+            {
+              "type": "exercise",
+              "id": "html-css-js",
+              "title": "Page Web Complète",
+              "description": "Créez une page web avec HTML, CSS et JavaScript",
+              "difficulty": "intermediate",
+              "category": "web",
+              "instructions": "Créez une page HTML avec du CSS pour le style et du JavaScript pour l'interactivité. La page doit contenir un bouton qui change de couleur au clic.",
+              "files": [
+                {
+                  "name": "index.php",
+                  "content": "<?php\n// Code PHP si nécessaire\n?>\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Ma Page Web</title>\n  <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n  <h1>Ma Page Interactive</h1>\n  <button id=\"colorButton\">Cliquez-moi</button>\n  <script src=\"script.js\"></script>\n</body>\n</html>"
+                },
+                {
+                  "name": "style.css",
+                  "content": "body {\n  font-family: Arial, sans-serif;\n  text-align: center;\n  padding: 50px;\n}\n\nh1 {\n  color: #333;\n}\n\n#colorButton {\n  padding: 10px 20px;\n  font-size: 16px;\n  background-color: #4CAF50;\n  color: white;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n}\n\n#colorButton:hover {\n  background-color: #45a049;\n}"
+                },
+                {
+                  "name": "script.js",
+                  "content": "// Votre code JavaScript ici\ndocument.getElementById('colorButton').addEventListener('click', function() {\n  // Changez la couleur du bouton\n});"
+                }
+              ],
+              "testType": "interactive",
+              "testCriteria": {
+                "buttonExists": true,
+                "buttonClickable": true,
+                "colorChanges": true
+              },
+              "hints": [
+                "Utilisez document.getElementById() pour accéder au bouton",
+                "addEventListener('click', ...) pour détecter les clics",
+                "style.backgroundColor pour changer la couleur"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 
-export default function ExerciseMode() {
+export default function ExerciseMode({ themeId, partId, onBack }) {
   const [exercises, setExercises] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [code, setCode] = useState("");
@@ -10,13 +10,21 @@ export default function ExerciseMode() {
   const [testResult, setTestResult] = useState(null);
   const [isTesting, setIsTesting] = useState(false);
 
-  // Charger les exercices au démarrage
+  // Charger les exercices du thème/partie spécifique
   useEffect(() => {
-    fetch("/api/exercises")
-      .then((res) => res.json())
-      .then((data) => setExercises(data))
-      .catch((err) => console.error("Erreur chargement exercices:", err));
-  }, []);
+    if (themeId && partId) {
+      fetch(`/api/themes/${themeId}/parts/${partId}/exercises`)
+        .then((res) => res.json())
+        .then((data) => setExercises(data))
+        .catch((err) => console.error("Erreur chargement exercices:", err));
+    } else {
+      // Fallback: charger tous les exercices
+      fetch("/api/exercises")
+        .then((res) => res.json())
+        .then((data) => setExercises(data))
+        .catch((err) => console.error("Erreur chargement exercices:", err));
+    }
+  }, [themeId, partId]);
 
   // Charger un exercice spécifique
   const loadExercise = async (exerciseId) => {
@@ -98,10 +106,22 @@ export default function ExerciseMode() {
       {/* Sidebar avec la liste des exercices */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">🧠 Exercices PHP</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Apprenez PHP avec des exercices interactifs
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">🧠 Exercices PHP</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Apprenez PHP avec des exercices interactifs
+              </p>
+            </div>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm"
+              >
+                ← Retour
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto">

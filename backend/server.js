@@ -9,7 +9,12 @@ import sanitizeHtml from "sanitize-html";
 const execPromise = promisify(exec);
 
 // Charger les exercices
-const exercises = JSON.parse(fs.readFileSync("./exercises.json", "utf8"));
+const exerciseData = JSON.parse(fs.readFileSync("./exercises.json", "utf8"));
+const exercises = exerciseData.themes
+  ? exerciseData.themes.flatMap((theme) =>
+      theme.parts.flatMap((part) => part.exercises)
+    )
+  : [];
 
 const app = express();
 app.use(cors());
@@ -394,6 +399,78 @@ app.post("/api/run-project", async (req, res) => {
 
     res.json({ error: err.message });
   }
+});
+
+// Endpoint pour récupérer la liste des thèmes
+app.get("/api/themes", (req, res) => {
+  res.json(exerciseData.themes || []);
+});
+
+// Endpoint pour récupérer le contenu d'une partie spécifique
+app.get("/api/themes/:themeId/parts/:partId", (req, res) => {
+  const { themeId, partId } = req.params;
+
+  const theme = exerciseData.themes?.find((t) => t.id === themeId);
+  if (!theme) {
+    return res.status(404).json({ error: "Theme not found" });
+  }
+
+  const part = theme.parts?.find((p) => p.id === partId);
+  if (!part) {
+    return res.status(404).json({ error: "Part not found" });
+  }
+
+  res.json(part);
+});
+
+// Endpoint pour tester une leçon
+app.post("/api/test-lesson", (req, res) => {
+  const { lessonId, answer } = req.body;
+
+  // Trouver la leçon dans toutes les parties
+  let foundLesson = null;
+  for (const theme of exerciseData.themes || []) {
+    for (const part of theme.parts || []) {
+      for (const item of part.content || []) {
+        if (item.type === "lesson" && item.id === lessonId) {
+          foundLesson = item;
+          break;
+        }
+      }
+      if (foundLesson) break;
+    }
+    if (foundLesson) break;
+  }
+
+  if (!foundLesson) {
+    return res.status(404).json({ error: "Lesson not found" });
+  }
+
+  let testResult = { passed: false, message: "", correct: false };
+
+  if (foundLesson.testType === "mcq") {
+    // Test QCM
+    const userAnswer = parseInt(answer);
+    const correctAnswer = foundLesson.correctAnswer;
+
+    testResult.passed = userAnswer === correctAnswer;
+    testResult.correct = testResult.passed;
+    testResult.message = testResult.passed
+      ? "✅ Bonne réponse !"
+      : `❌ Réponse incorrecte. La bonne réponse était : "${foundLesson.options[correctAnswer]}"`;
+  } else if (foundLesson.testType === "text") {
+    // Test texte (ancien système)
+    const userAnswer = answer.toLowerCase().trim();
+    const correctAnswer = foundLesson.answer.toLowerCase().trim();
+
+    testResult.passed = userAnswer === correctAnswer;
+    testResult.correct = testResult.passed;
+    testResult.message = testResult.passed
+      ? "✅ Bonne réponse !"
+      : `❌ Réponse incorrecte. La bonne réponse était : "${foundLesson.answer}"`;
+  }
+
+  res.json(testResult);
 });
 
 // Endpoint pour récupérer la liste des exercices
