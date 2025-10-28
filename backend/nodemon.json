@@ -1,0 +1,4 @@
+{
+  "ignore": ["sandbox/*"],
+  "ext": "js,mjs,cjs,json"
+}
