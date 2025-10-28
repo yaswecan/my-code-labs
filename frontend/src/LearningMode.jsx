@@ -442,6 +442,21 @@ export default function LearningMode({ themeId, partId, onBack }) {
                         <h3 className="font-semibold text-gray-800">📊 Résultats du Test</h3>
                       </div>
 
+                      {/* Bouton Tester - toujours visible en haut */}
+                      <div className="p-4 border-b border-gray-200 bg-gray-50">
+                        <button
+                          onClick={testExercise}
+                          disabled={isTesting}
+                          className={`w-full px-6 py-3 rounded-lg font-semibold text-lg ${
+                            isTesting
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-green-600 hover:bg-green-700"
+                          } text-white`}
+                        >
+                          {isTesting ? "⏳ Test en cours..." : "✅ Tester"}
+                        </button>
+                      </div>
+
                       <div className="flex-1 p-4 overflow-y-auto">
                         {testResult ? (
                           <div className={`p-4 rounded-lg ${
@@ -478,23 +493,9 @@ export default function LearningMode({ themeId, partId, onBack }) {
                         ) : (
                           <div className="text-center text-gray-500 mt-8">
                             <div className="text-4xl mb-4">🎯</div>
-                            <p>Cliquez sur "Tester" pour vérifier votre solution</p>
+                            <p>Les résultats du test apparaîtront ici</p>
                           </div>
                         )}
-                      </div>
-
-                      <div className="p-4 border-t border-gray-200">
-                        <button
-                          onClick={testExercise}
-                          disabled={isTesting}
-                          className={`w-full px-6 py-2 rounded-lg font-semibold ${
-                            isTesting
-                              ? "bg-gray-400 cursor-not-allowed"
-                              : "bg-green-600 hover:bg-green-700"
-                          } text-white`}
-                        >
-                          {isTesting ? "⏳ Test en cours..." : "✅ Tester"}
-                        </button>
                       </div>
                     </div>
                   </div>

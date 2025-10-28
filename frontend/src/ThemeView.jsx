@@ -120,21 +120,31 @@ export default function ThemeView() {
               </div>
             </div>
 
-            {/* Bouton pour commencer les exercices */}
+            {/* Bouton pour commencer les exercices - maintenant sticky en bas */}
             {selectedPart && (
-              <div className="bg-white border-t border-gray-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 shadow-lg">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex-1">
                     <h3 className="font-semibold text-gray-800">
                       {selectedPart.title}
                     </h3>
                     <p className="text-sm text-gray-600">
                       {selectedPart.content ? selectedPart.content.filter(item => item.type === 'exercise').length : 0} élément{selectedPart.content && selectedPart.content.filter(item => item.type === 'exercise').length > 1 ? 's' : ''} d'apprentissage disponible{selectedPart.content && selectedPart.content.filter(item => item.type === 'exercise').length > 1 ? 's' : ''}
                     </p>
+                    {/* Indicateur de progression */}
+                    <div className="mt-2 flex items-center text-xs text-gray-500">
+                      <span className="mr-2">Progression:</span>
+                      <div className="flex items-center">
+                        <div className="w-32 h-2 bg-gray-200 rounded-full mr-2">
+                          <div className="h-2 bg-green-500 rounded-full" style={{ width: '0%' }}></div>
+                        </div>
+                        <span>0%</span>
+                      </div>
+                    </div>
                   </div>
                   <button
                     onClick={startLearning}
-                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-center whitespace-nowrap shadow-md"
                   >
                     Commencer l'apprentissage
                   </button>
