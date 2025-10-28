@@ -1,0 +1,98 @@
+[
+  {
+    "id": "hello-world",
+    "title": "Hello World",
+    "description": "Créez une page PHP qui affiche 'Hello World!'",
+    "difficulty": "beginner",
+    "category": "basics",
+    "instructions": "Écrivez un script PHP qui affiche le message 'Hello World!' à l'écran.",
+    "initialCode": "<?php\n// Votre code ici\n?>",
+    "expectedOutput": "Hello World!",
+    "testType": "output",
+    "hints": [
+      "Utilisez la fonction echo pour afficher du texte",
+      "N'oubliez pas le point-virgule à la fin de la ligne"
+    ]
+  },
+  {
+    "id": "variables-numbers",
+    "title": "Variables et Nombres",
+    "description": "Créez un script qui utilise des variables pour calculer et afficher des nombres",
+    "difficulty": "beginner",
+    "category": "variables",
+    "instructions": "Déclarez deux variables avec des nombres, additionnez-les et affichez le résultat.",
+    "initialCode": "<?php\n// Déclarez vos variables ici\n\n// Calculez la somme\n\n// Affichez le résultat\n?>",
+    "expectedOutput": "15",
+    "testType": "output",
+    "hints": [
+      "Utilisez $ pour déclarer une variable",
+      "L'opérateur + permet d'additionner",
+      "echo affiche le contenu d'une variable"
+    ]
+  },
+  {
+    "id": "html-css-js",
+    "title": "Page Web Complète",
+    "description": "Créez une page web avec HTML, CSS et JavaScript",
+    "difficulty": "intermediate",
+    "category": "web",
+    "instructions": "Créez une page HTML avec du CSS pour le style et du JavaScript pour l'interactivité. La page doit contenir un bouton qui change de couleur au clic.",
+    "files": [
+      {
+        "name": "index.php",
+        "content": "<?php\n// Code PHP si nécessaire\n?>\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Ma Page Web</title>\n  <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n  <h1>Ma Page Interactive</h1>\n  <button id=\"colorButton\">Cliquez-moi</button>\n  <script src=\"script.js\"></script>\n</body>\n</html>"
+      },
+      {
+        "name": "style.css",
+        "content": "body {\n  font-family: Arial, sans-serif;\n  text-align: center;\n  padding: 50px;\n}\n\nh1 {\n  color: #333;\n}\n\n#colorButton {\n  padding: 10px 20px;\n  font-size: 16px;\n  background-color: #4CAF50;\n  color: white;\n  border: none;\n  border-radius: 5px;\n  cursor: pointer;\n}\n\n#colorButton:hover {\n  background-color: #45a049;\n}"
+      },
+      {
+        "name": "script.js",
+        "content": "// Votre code JavaScript ici\ndocument.getElementById('colorButton').addEventListener('click', function() {\n  // Changez la couleur du bouton\n});"
+      }
+    ],
+    "testType": "interactive",
+    "testCriteria": {
+      "buttonExists": true,
+      "buttonClickable": true,
+      "colorChanges": true
+    },
+    "hints": [
+      "Utilisez document.getElementById() pour accéder au bouton",
+      "addEventListener('click', ...) pour détecter les clics",
+      "style.backgroundColor pour changer la couleur"
+    ]
+  },
+  {
+    "id": "php-functions",
+    "title": "Fonctions PHP",
+    "description": "Créez et utilisez des fonctions PHP",
+    "difficulty": "intermediate",
+    "category": "functions",
+    "instructions": "Créez une fonction qui calcule le carré d'un nombre et utilisez-la pour afficher le carré de 5.",
+    "initialCode": "<?php\n// Déclarez votre fonction ici\n\nfunction square($number) {\n  // Retournez le carré du nombre\n}\n\n// Utilisez la fonction\n$result = square(5);\necho $result;\n?>",
+    "expectedOutput": "25",
+    "testType": "output",
+    "hints": [
+      "Les fonctions se déclarent avec le mot-clé function",
+      "return permet de retourner une valeur",
+      "Appelez la fonction avec son nom suivi de parenthèses"
+    ]
+  },
+  {
+    "id": "arrays-loops",
+    "title": "Tableaux et Boucles",
+    "description": "Utilisez des tableaux et des boucles en PHP",
+    "difficulty": "intermediate",
+    "category": "arrays",
+    "instructions": "Créez un tableau de nombres et utilisez une boucle pour afficher chaque nombre multiplié par 2.",
+    "initialCode": "<?php\n// Créez un tableau de nombres\n$numbers = array(1, 2, 3, 4, 5);\n\n// Utilisez une boucle pour afficher chaque nombre * 2\nforeach ($numbers as $number) {\n  echo ($number * 2) . \" \";\n}\n?>",
+    "expectedOutput": "2 4 6 8 10",
+    "testType": "output",
+    "hints": [
+      "array() crée un tableau",
+      "foreach parcourt les éléments du tableau",
+      "L'opérateur * permet la multiplication"
+    ]
+  }
+]

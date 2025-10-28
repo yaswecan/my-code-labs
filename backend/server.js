@@ -8,6 +8,9 @@ import sanitizeHtml from "sanitize-html";
 
 const execPromise = promisify(exec);
 
+// Charger les exercices
+const exercises = JSON.parse(fs.readFileSync("./exercises.json", "utf8"));
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -393,6 +396,186 @@ app.post("/api/run-project", async (req, res) => {
   }
 });
 
+// Endpoint pour récupérer la liste des exercices
+app.get("/api/exercises", (req, res) => {
+  res.json(
+    exercises.map((ex) => ({
+      id: ex.id,
+      title: ex.title,
+      description: ex.description,
+      difficulty: ex.difficulty,
+      category: ex.category,
+    }))
+  );
+});
+
+// Endpoint pour récupérer un exercice spécifique
+app.get("/api/exercises/:id", (req, res) => {
+  const exercise = exercises.find((ex) => ex.id === req.params.id);
+  if (!exercise) {
+    return res.status(404).json({ error: "Exercise not found" });
+  }
+  res.json(exercise);
+});
+
+// Fonction pour exécuter du code PHP simple
+async function runCode(code) {
+  const fileName = `test_${Date.now()}.php`;
+  const filePath = path.join(TMP_DIR, fileName);
+
+  try {
+    const dockerReady = await checkDockerConnectivity();
+    if (!dockerReady) {
+      throw new Error("PHP sandbox container is not ready.");
+    }
+
+    fs.writeFileSync(filePath, code);
+
+    const phpFilePathInContainer = `/sandbox/${fileName}`;
+    const cmd = `docker exec php_sandbox php ${phpFilePathInContainer}`;
+
+    const { stdout, stderr } = await execPromise(cmd);
+
+    // Cleanup
+    try {
+      fs.unlinkSync(filePath);
+    } catch (cleanupErr) {
+      console.error(`Failed to cleanup ${filePath}:`, cleanupErr.message);
+    }
+
+    if (stderr) {
+      throw new Error(stderr);
+    }
+
+    return { output: stdout };
+  } catch (error) {
+    // Cleanup on error
+    if (fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch (cleanupErr) {
+        console.error(`Failed to cleanup ${filePath}:`, cleanupErr.message);
+      }
+    }
+    throw error;
+  }
+}
+
+// Fonction pour exécuter un projet multi-fichiers
+async function runProject(files, entryPoint) {
+  const projectId = `test_project_${Date.now()}`;
+  const projectPath = path.join(TMP_DIR, projectId);
+
+  try {
+    const dockerReady = await checkDockerConnectivity();
+    if (!dockerReady) {
+      throw new Error("PHP sandbox container is not ready.");
+    }
+
+    fs.mkdirSync(projectPath, { recursive: true });
+
+    // Write all files
+    for (const file of files) {
+      const filePath = path.join(projectPath, file.name);
+      fs.writeFileSync(filePath, file.content);
+    }
+
+    const entryPointPath = `/sandbox/${projectId}/${entryPoint}`;
+    const cmd = `docker exec php_sandbox php ${entryPointPath}`;
+
+    const { stdout, stderr } = await execPromise(cmd);
+
+    // Cleanup
+    try {
+      fs.rmSync(projectPath, { recursive: true, force: true });
+    } catch (cleanupErr) {
+      console.error(`Failed to cleanup ${projectPath}:`, cleanupErr.message);
+    }
+
+    if (stderr) {
+      throw new Error(stderr);
+    }
+
+    return { output: stdout };
+  } catch (error) {
+    // Cleanup on error
+    if (fs.existsSync(projectPath)) {
+      try {
+        fs.rmSync(projectPath, { recursive: true, force: true });
+      } catch (cleanupErr) {
+        console.error(`Failed to cleanup ${projectPath}:`, cleanupErr.message);
+      }
+    }
+    throw error;
+  }
+}
+
+// Endpoint pour tester un exercice
+app.post("/api/test-exercise", async (req, res) => {
+  const { exerciseId, code, files } = req.body;
+
+  const exercise = exercises.find((ex) => ex.id === exerciseId);
+  if (!exercise) {
+    return res.status(404).json({ error: "Exercise not found" });
+  }
+
+  try {
+    let testResult = { passed: false, message: "", details: {} };
+
+    if (exercise.testType === "output") {
+      // Test basé sur la sortie
+      const result = await runCode(code);
+      const output = result.output.trim();
+
+      testResult.passed = output === exercise.expectedOutput;
+      testResult.message = testResult.passed
+        ? "✅ Test réussi !"
+        : `❌ Test échoué. Attendu: "${exercise.expectedOutput}", Reçu: "${output}"`;
+      testResult.details = {
+        expected: exercise.expectedOutput,
+        actual: output,
+      };
+    } else if (exercise.testType === "interactive") {
+      // Test pour projets multi-fichiers interactifs
+      const result = await runProject(
+        files || [{ name: "index.php", content: code }],
+        "index.php"
+      );
+
+      // Vérifications basiques pour les tests interactifs
+      const hasButton =
+        result.output.includes("<button") &&
+        result.output.includes("</button>");
+      const hasScript =
+        result.output.includes("<script") &&
+        result.output.includes("</script>");
+      const hasStyle =
+        result.output.includes("<style") ||
+        result.output.includes('href="style.css"');
+
+      testResult.passed = hasButton && hasScript && hasStyle;
+      testResult.message = testResult.passed
+        ? "✅ Structure de la page validée !"
+        : "❌ La page ne contient pas tous les éléments requis (bouton, script, style)";
+      testResult.details = {
+        hasButton,
+        hasScript,
+        hasStyle,
+        output: result.output.substring(0, 500) + "...",
+      };
+    }
+
+    res.json(testResult);
+  } catch (error) {
+    res.status(500).json({
+      passed: false,
+      message: "❌ Erreur lors du test: " + error.message,
+      details: { error: error.message },
+    });
+  }
+});
+
 app.listen(4000, () => {
   console.log("🚀 Backend running on http://localhost:4000");
+  console.log(`📚 ${exercises.length} exercises loaded`);
 });
