@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import { promisify } from "util";
 import sanitizeHtml from "sanitize-html";
-import { initDB } from "./db.js";
+import { pool, initDB } from "./db.js";
 import {
   authenticateToken,
   createUser,
@@ -772,7 +772,37 @@ app.post("/api/test-exercise", authenticateToken, async (req, res) => {
   }
 });
 
+// Endpoint pour récupérer les informations de base de données de l'élève
+app.get("/api/user/database-info", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const [rows] = await pool.execute(
+      "SELECT db_name, db_user, db_password, db_host, db_port FROM users WHERE id = ?",
+      [userId]
+    );
+
+    if (rows.length === 0 || !rows[0].db_name) {
+      return res.status(404).json({ error: "Base de données non configurée" });
+    }
+
+    const dbInfo = rows[0];
+    res.json({
+      dbName: dbInfo.db_name,
+      dbUser: dbInfo.db_user,
+      dbPassword: dbInfo.db_password,
+      dbHost: dbInfo.db_host,
+      dbPort: dbInfo.db_port,
+      phpmyadminUrl: `http://localhost:8080`,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des infos DB:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 app.listen(4000, () => {
   console.log("🚀 Backend running on http://localhost:4000");
   console.log(`📚 ${exercises.length} exercises loaded`);
+  console.log("🗄️  phpMyAdmin disponible sur http://localhost:8080");
 });

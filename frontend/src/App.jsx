@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useAuth } from "./AuthContext.jsx";
 import MultiFileEditor from "./MultiFileEditor.jsx";
 import ThemeView from "./ThemeView.jsx";
+import DatabaseInfo from "./DatabaseInfo.jsx";
 import Login from "./Login.jsx";
 import Register from "./Register.jsx";
 
 function App() {
-  const [mode, setMode] = useState("editor"); // "editor", "themes", or "exercises"
+  const [mode, setMode] = useState("editor"); // "editor", "themes", "database"
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const { user, logout, loading } = useAuth();
@@ -98,6 +99,16 @@ function App() {
           >
             Thèmes d'Apprentissage
           </button>
+          <button
+            onClick={() => setMode("database")}
+            className={`px-4 py-2 rounded ${
+              mode === "database"
+                ? "bg-purple-600 hover:bg-purple-700"
+                : "bg-gray-600 hover:bg-gray-700"
+            }`}
+          >
+            🗄️ Ma Base de Données
+          </button>
           <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-600">
             <span className="text-sm">👤 {user.username}</span>
             <button
@@ -112,7 +123,13 @@ function App() {
 
       {/* Content */}
       <div className="h-[calc(100vh-80px)]">
-        {mode === "editor" ? <MultiFileEditor /> : <ThemeView />}
+        {mode === "editor" ? (
+          <MultiFileEditor />
+        ) : mode === "themes" ? (
+          <ThemeView />
+        ) : (
+          <DatabaseInfo />
+        )}
       </div>
     </div>
   );

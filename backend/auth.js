@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { pool } from "./db.js";
+import { pool, createStudentDatabase } from "./db.js";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -57,12 +57,41 @@ export async function createUser(username, email, password) {
   const hashedPassword = await hashPassword(password);
 
   try {
+    // Créer l'utilisateur d'abord
     const [result] = await pool.execute(
       "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
       [username, email, hashedPassword]
     );
 
-    return { id: result.insertId, username, email };
+    const userId = result.insertId;
+
+    // Créer la base de données dédiée pour l'élève
+    try {
+      const dbCredentials = await createStudentDatabase(userId, username);
+
+      // Mettre à jour l'utilisateur avec les credentials de sa DB
+      await pool.execute(
+        "UPDATE users SET db_name = ?, db_user = ?, db_password = ?, db_host = ?, db_port = ? WHERE id = ?",
+        [
+          dbCredentials.dbName,
+          dbCredentials.dbUser,
+          dbCredentials.dbPassword,
+          dbCredentials.dbHost,
+          dbCredentials.dbPort,
+          userId,
+        ]
+      );
+
+      console.log(`✅ Utilisateur ${username} créé avec sa base de données`);
+    } catch (dbError) {
+      console.error(
+        `⚠️ Erreur lors de la création de la DB pour ${username}:`,
+        dbError
+      );
+      // On continue même si la création de la DB échoue
+    }
+
+    return { id: userId, username, email };
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
       throw new Error("Nom d'utilisateur ou email déjà utilisé");
