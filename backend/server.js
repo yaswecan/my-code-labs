@@ -5,6 +5,17 @@ import fs from "fs";
 import path from "path";
 import { promisify } from "util";
 import sanitizeHtml from "sanitize-html";
+import { initDB } from "./db.js";
+import {
+  authenticateToken,
+  createUser,
+  authenticateUser,
+  generateToken,
+  updateExerciseProgress,
+  updateLessonProgress,
+  getUserProgress,
+  getPartProgress,
+} from "./auth.js";
 
 const execPromise = promisify(exec);
 
@@ -12,7 +23,9 @@ const execPromise = promisify(exec);
 const exerciseData = JSON.parse(fs.readFileSync("./exercises.json", "utf8"));
 const exercises = exerciseData.themes
   ? exerciseData.themes.flatMap((theme) =>
-      theme.parts.flatMap((part) => part.exercises)
+      theme.parts.flatMap(
+        (part) => part.content?.filter((item) => item.type === "exercise") || []
+      )
     )
   : [];
 
@@ -49,6 +62,9 @@ async function checkDockerConnectivity() {
     return false;
   }
 }
+
+// Initialiser la base de données
+initDB().catch(console.error);
 
 // Vérifier la connectivité Docker au démarrage
 checkDockerConnectivity();
@@ -401,31 +417,103 @@ app.post("/api/run-project", async (req, res) => {
   }
 });
 
+// Routes d'authentification
+app.post("/api/auth/register", async (req, res) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "Tous les champs sont requis" });
+  }
+
+  if (password.length < 6) {
+    return res
+      .status(400)
+      .json({ error: "Le mot de passe doit contenir au moins 6 caractères" });
+  }
+
+  try {
+    const user = await createUser(username, email, password);
+    const token = generateToken(user);
+
+    res.status(201).json({
+      message: "Utilisateur créé avec succès",
+      user: { id: user.id, username: user.username, email: user.email },
+      token,
+    });
+  } catch (error) {
+    console.error("Erreur lors de l'inscription:", error);
+    res
+      .status(500)
+      .json({ error: error.message || "Erreur lors de l'inscription" });
+  }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  const { usernameOrEmail, password } = req.body;
+
+  if (!usernameOrEmail || !password) {
+    return res
+      .status(400)
+      .json({ error: "Nom d'utilisateur/email et mot de passe requis" });
+  }
+
+  try {
+    const user = await authenticateUser(usernameOrEmail, password);
+
+    if (!user) {
+      return res.status(401).json({ error: "Identifiants invalides" });
+    }
+
+    const token = generateToken(user);
+
+    res.json({
+      message: "Connexion réussie",
+      user,
+      token,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la connexion:", error);
+    res.status(500).json({ error: "Erreur lors de la connexion" });
+  }
+});
+
 // Endpoint pour récupérer la liste des thèmes
 app.get("/api/themes", (req, res) => {
   res.json(exerciseData.themes || []);
 });
 
 // Endpoint pour récupérer le contenu d'une partie spécifique
-app.get("/api/themes/:themeId/parts/:partId", (req, res) => {
-  const { themeId, partId } = req.params;
+app.get(
+  "/api/themes/:themeId/parts/:partId",
+  authenticateToken,
+  async (req, res) => {
+    const { themeId, partId } = req.params;
+    const userId = req.user.id;
 
-  const theme = exerciseData.themes?.find((t) => t.id === themeId);
-  if (!theme) {
-    return res.status(404).json({ error: "Theme not found" });
+    const theme = exerciseData.themes?.find((t) => t.id === themeId);
+    if (!theme) {
+      return res.status(404).json({ error: "Theme not found" });
+    }
+
+    const part = theme.parts?.find((p) => p.id === partId);
+    if (!part) {
+      return res.status(404).json({ error: "Part not found" });
+    }
+
+    // Calculer la progression de la partie pour cet utilisateur
+    const progress = await getPartProgress(userId, part);
+
+    res.json({
+      ...part,
+      progress,
+    });
   }
-
-  const part = theme.parts?.find((p) => p.id === partId);
-  if (!part) {
-    return res.status(404).json({ error: "Part not found" });
-  }
-
-  res.json(part);
-});
+);
 
 // Endpoint pour tester une leçon
-app.post("/api/test-lesson", (req, res) => {
+app.post("/api/test-lesson", authenticateToken, async (req, res) => {
   const { lessonId, answer } = req.body;
+  const userId = req.user.id;
 
   // Trouver la leçon dans toutes les parties
   let foundLesson = null;
@@ -469,6 +557,10 @@ app.post("/api/test-lesson", (req, res) => {
       ? "✅ Bonne réponse !"
       : `❌ Réponse incorrecte. La bonne réponse était : "${foundLesson.answer}"`;
   }
+
+  // Mettre à jour la progression de la leçon
+  const score = testResult.passed ? 100 : 0;
+  await updateLessonProgress(userId, lessonId, testResult.passed, score);
 
   res.json(testResult);
 });
@@ -588,8 +680,9 @@ async function runProject(files, entryPoint) {
 }
 
 // Endpoint pour tester un exercice
-app.post("/api/test-exercise", async (req, res) => {
+app.post("/api/test-exercise", authenticateToken, async (req, res) => {
   const { exerciseId, code, files } = req.body;
+  const userId = req.user.id;
 
   const exercise = exercises.find((ex) => ex.id === exerciseId);
   if (!exercise) {
@@ -641,6 +734,10 @@ app.post("/api/test-exercise", async (req, res) => {
         output: result.output.substring(0, 500) + "...",
       };
     }
+
+    // Mettre à jour la progression de l'exercice
+    const score = testResult.passed ? 100 : 0;
+    await updateExerciseProgress(userId, exerciseId, testResult.passed, score);
 
     res.json(testResult);
   } catch (error) {

@@ -21,7 +21,7 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/monapp
+      - DATABASE_URL=mysql://user:password@db:3306/monapp
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -54,19 +54,20 @@ services:
       start_period: 5s
 
   db:
-    image: postgres:15
+    image: mysql:8.0
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: monapp
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: monapp
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
     ports:
-      - "5432:5432"
+      - "3306:3306"
 
 volumes:
-  pgdata:
+  mysqldata:
 
 networks:
   app-network:

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "./AuthContext.jsx";
 import Editor from "@monaco-editor/react";
 
 export default function LearningMode({ themeId, partId, onBack }) {
   const [part, setPart] = useState(null);
+  const { getAuthHeaders } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lessonAnswer, setLessonAnswer] = useState("");
   const [selectedOption, setSelectedOption] = useState(null);
@@ -15,7 +17,9 @@ export default function LearningMode({ themeId, partId, onBack }) {
 
   // Charger le contenu de la partie
   useEffect(() => {
-    fetch(`/api/themes/${themeId}/parts/${partId}`)
+    fetch(`/api/themes/${themeId}/parts/${partId}`, {
+      headers: getAuthHeaders()
+    })
       .then((res) => res.json())
       .then((data) => {
         setPart(data);
@@ -77,7 +81,10 @@ export default function LearningMode({ themeId, partId, onBack }) {
     try {
       const res = await fetch("/api/test-lesson", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({
           lessonId: currentItem.id,
           answer: answer
@@ -108,7 +115,10 @@ export default function LearningMode({ themeId, partId, onBack }) {
 
       const res = await fetch("/api/test-exercise", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...getAuthHeaders()
+        },
         body: JSON.stringify(payload),
       });
 

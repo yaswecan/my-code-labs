@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "./AuthContext.jsx";
 import LearningMode from "./LearningMode.jsx";
 
 export default function ThemeView() {
@@ -6,10 +7,13 @@ export default function ThemeView() {
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [selectedPart, setSelectedPart] = useState(null);
   const [showExerciseMode, setShowExerciseMode] = useState(false);
+  const { getAuthHeaders } = useAuth();
 
   // Charger les thèmes au démarrage
   useEffect(() => {
-    fetch("/api/themes")
+    fetch("/api/themes", {
+      headers: getAuthHeaders()
+    })
       .then((res) => res.json())
       .then((data) => setThemes(data))
       .catch((err) => console.error("Erreur chargement thèmes:", err));
@@ -136,9 +140,9 @@ export default function ThemeView() {
                       <span className="mr-2">Progression:</span>
                       <div className="flex items-center">
                         <div className="w-32 h-2 bg-gray-200 rounded-full mr-2">
-                          <div className="h-2 bg-green-500 rounded-full" style={{ width: '0%' }}></div>
+                          <div className="h-2 bg-green-500 rounded-full" style={{ width: `${selectedPart.progress || 0}%` }}></div>
                         </div>
-                        <span>0%</span>
+                        <span>{selectedPart.progress || 0}%</span>
                       </div>
                     </div>
                   </div>
