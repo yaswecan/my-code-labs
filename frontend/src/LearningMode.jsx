@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext.jsx";
 import Editor from "@monaco-editor/react";
 
-export default function LearningMode({ themeId, partId, onBack }) {
+export default function LearningMode({ themeId, partId, onBack, startIndex = 0 }) {
   const [part, setPart] = useState(null);
   const { getAuthHeaders } = useAuth();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(startIndex);
   const [lessonAnswer, setLessonAnswer] = useState("");
   const [selectedOption, setSelectedOption] = useState(null);
   const [lessonResult, setLessonResult] = useState(null);
@@ -15,6 +15,19 @@ export default function LearningMode({ themeId, partId, onBack }) {
   const [testResult, setTestResult] = useState(null);
   const [isTesting, setIsTesting] = useState(false);
 
+  // Fonction pour recharger la progression
+  const reloadProgress = async () => {
+    try {
+      const res = await fetch(`/api/themes/${themeId}/parts/${partId}`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setPart(data);
+    } catch (err) {
+      console.error("Erreur rechargement progression:", err);
+    }
+  };
+
   // Charger le contenu de la partie
   useEffect(() => {
     fetch(`/api/themes/${themeId}/parts/${partId}`, {
@@ -23,16 +36,17 @@ export default function LearningMode({ themeId, partId, onBack }) {
       .then((res) => res.json())
       .then((data) => {
         setPart(data);
-        // Initialiser avec le premier élément
+        // Initialiser avec l'élément au startIndex
         if (data.content && data.content.length > 0) {
-          const firstItem = data.content[0];
-          if (firstItem.type === "exercise") {
-            initializeExercise(firstItem);
+          const itemToStart = data.content[startIndex] || data.content[0];
+          setCurrentIndex(startIndex);
+          if (itemToStart.type === "exercise") {
+            initializeExercise(itemToStart);
           }
         }
       })
       .catch((err) => console.error("Erreur chargement partie:", err));
-  }, [themeId, partId]);
+  }, [themeId, partId, getAuthHeaders, startIndex]);
 
   const initializeExercise = (exercise) => {
     if (exercise.files) {
@@ -93,6 +107,11 @@ export default function LearningMode({ themeId, partId, onBack }) {
 
       const result = await res.json();
       setLessonResult(result);
+
+      // Si la leçon est validée, recharger la progression
+      if (result.passed) {
+        await reloadProgress();
+      }
     } catch (error) {
       setLessonResult({
         passed: false,
@@ -124,6 +143,11 @@ export default function LearningMode({ themeId, partId, onBack }) {
 
       const result = await res.json();
       setTestResult(result);
+
+      // Si l'exercice est validé, recharger la progression
+      if (result.passed) {
+        await reloadProgress();
+      }
     } catch (error) {
       setTestResult({
         passed: false,
@@ -181,44 +205,51 @@ export default function LearningMode({ themeId, partId, onBack }) {
 
         <div className="flex-1 overflow-y-auto p-4">
           <div className="space-y-3">
-            {part.content.map((item, index) => (
-              <div
-                key={item.id}
-                className={`p-3 rounded-lg border ${
-                  index === currentIndex
-                    ? "border-blue-500 bg-blue-50"
-                    : index < currentIndex
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-3 ${
-                    index < currentIndex
-                      ? "bg-green-500 text-white"
-                      : index === currentIndex
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-300 text-gray-600"
-                  }`}>
-                    {index < currentIndex ? "✓" : index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center">
-                      <span className={`text-xs px-2 py-1 rounded-full mr-2 ${
-                        item.type === "lesson"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-orange-100 text-orange-800"
-                      }`}>
-                        {item.type === "lesson" ? "📖 Leçon" : "💻 Exercice"}
-                      </span>
+            {part.content.map((item, index) => {
+              // Vérifier si l'élément est validé (leçon ou exercice)
+              const isCompleted = item.type === "lesson"
+                ? part.lessonProgress?.some(lp => lp.lesson_id === item.id && lp.completed)
+                : part.exerciseProgress?.some(ep => ep.exercise_id === item.id && ep.completed);
+
+              return (
+                <div
+                  key={item.id}
+                  className={`p-3 rounded-lg border ${
+                    index === currentIndex
+                      ? "border-blue-500 bg-blue-50"
+                      : isCompleted
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-3 ${
+                      isCompleted
+                        ? "bg-green-500 text-white"
+                        : index === currentIndex
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-300 text-gray-600"
+                    }`}>
+                      {isCompleted ? "✓" : index + 1}
                     </div>
-                    <h4 className="font-medium text-gray-800 text-sm">
-                      {item.title}
-                    </h4>
+                    <div className="flex-1">
+                      <div className="flex items-center">
+                        <span className={`text-xs px-2 py-1 rounded-full mr-2 ${
+                          item.type === "lesson"
+                            ? "bg-purple-100 text-purple-800"
+                            : "bg-orange-100 text-orange-800"
+                        }`}>
+                          {item.type === "lesson" ? "📖 Leçon" : "💻 Exercice"}
+                        </span>
+                      </div>
+                      <h4 className="font-medium text-gray-800 text-sm">
+                        {item.title}
+                      </h4>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

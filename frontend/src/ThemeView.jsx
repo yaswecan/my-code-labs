@@ -9,6 +9,27 @@ export default function ThemeView() {
   const [showExerciseMode, setShowExerciseMode] = useState(false);
   const { getAuthHeaders } = useAuth();
 
+  // Fonction pour recharger les thèmes avec progression
+  const reloadThemes = async () => {
+    try {
+      const res = await fetch("/api/themes", {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      setThemes(data);
+
+      // Si un thème est sélectionné, le mettre à jour aussi
+      if (selectedTheme) {
+        const updatedTheme = data.find(t => t.id === selectedTheme.id);
+        if (updatedTheme) {
+          await selectTheme(updatedTheme);
+        }
+      }
+    } catch (err) {
+      console.error("Erreur rechargement thèmes:", err);
+    }
+  };
+
   // Charger les thèmes au démarrage
   useEffect(() => {
     fetch("/api/themes", {
@@ -17,25 +38,66 @@ export default function ThemeView() {
       .then((res) => res.json())
       .then((data) => setThemes(data))
       .catch((err) => console.error("Erreur chargement thèmes:", err));
-  }, []);
+  }, [getAuthHeaders]);
 
-  const selectTheme = (theme) => {
+  const selectTheme = async (theme) => {
     setSelectedTheme(theme);
     setSelectedPart(null);
     setShowExerciseMode(false);
+
+    // Charger les parties avec leur progression
+    if (theme.parts) {
+      const partsWithProgress = await Promise.all(
+        theme.parts.map(async (part) => {
+          try {
+            const response = await fetch(`/api/themes/${theme.id}/parts/${part.id}`, {
+              headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            return { ...part, progress: data.progress };
+          } catch (error) {
+            console.error(`Erreur chargement partie ${part.id}:`, error);
+            return { ...part, progress: 0 };
+          }
+        })
+      );
+      setSelectedTheme({ ...theme, parts: partsWithProgress });
+    }
   };
 
-  const selectPart = (part) => {
-    setSelectedPart(part);
+  const selectPart = async (part) => {
+    // Recharger la partie avec sa progression complète
+    try {
+      const response = await fetch(`/api/themes/${selectedTheme.id}/parts/${part.id}`, {
+        headers: getAuthHeaders()
+      });
+      const data = await response.json();
+      setSelectedPart(data);
+    } catch (error) {
+      console.error(`Erreur chargement partie ${part.id}:`, error);
+      setSelectedPart(part);
+    }
     setShowExerciseMode(false);
   };
 
-  const startLearning = () => {
+  const startLearning = (startIndex = 0) => {
     setShowExerciseMode(true);
+    setSelectedPart({ ...selectedPart, startIndex });
   };
 
   if (showExerciseMode && selectedPart) {
-    return <LearningMode themeId={selectedTheme.id} partId={selectedPart.id} onBack={() => setShowExerciseMode(false)} />;
+    return (
+      <LearningMode 
+        themeId={selectedTheme.id} 
+        partId={selectedPart.id}
+        startIndex={selectedPart.startIndex || 0}
+        onBack={() => {
+          setShowExerciseMode(false);
+          // Recharger les thèmes pour mettre à jour la progression
+          reloadThemes();
+        }} 
+      />
+    );
   }
 
   return (
@@ -64,6 +126,18 @@ export default function ThemeView() {
               <p className="text-xs text-gray-600 mt-1 line-clamp-2">
                 {theme.description}
               </p>
+              {/* Barre de progression du thème */}
+              <div className="mt-2 flex items-center text-xs text-gray-500">
+                <div className="flex items-center w-full">
+                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full mr-2">
+                    <div 
+                      className="h-1.5 bg-blue-500 rounded-full transition-all duration-300" 
+                      style={{ width: `${theme.progress || 0}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-xs font-medium">{theme.progress || 0}%</span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -109,8 +183,21 @@ export default function ThemeView() {
                           <p className="text-gray-600 text-sm mb-3">
                             {part.description}
                           </p>
-                          <div className="text-xs text-gray-500">
-                            {part.content ? part.content.filter(item => item.type === 'exercise').length : 0} exercice{part.content && part.content.filter(item => item.type === 'exercise').length > 1 ? 's' : ''}
+                          <div className="text-xs text-gray-500 mb-2">
+                            {part.content ? part.content.filter(item => item.type === 'exercise').length : 0} exercice{part.content && part.content.filter(item => item.type === 'exercise').length > 1 ? 's' : ''}, {part.content ? part.content.filter(item => item.type === 'lesson').length : 0} leçon{part.content && part.content.filter(item => item.type === 'lesson').length > 1 ? 's' : ''}
+                          </div>
+                          {/* Barre de progression de la partie */}
+                          <div className="flex items-center text-xs text-gray-500">
+                            <span className="mr-2">Progression:</span>
+                            <div className="flex items-center flex-1">
+                              <div className="flex-1 h-2 bg-gray-200 rounded-full mr-2">
+                                <div 
+                                  className="h-2 bg-green-500 rounded-full transition-all duration-300" 
+                                  style={{ width: `${part.progress || 0}%` }}
+                                ></div>
+                              </div>
+                              <span className="font-medium">{part.progress || 0}%</span>
+                            </div>
                           </div>
                         </div>
                         <div className="ml-4">
@@ -133,7 +220,7 @@ export default function ThemeView() {
                       {selectedPart.title}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {selectedPart.content ? selectedPart.content.filter(item => item.type === 'exercise').length : 0} élément{selectedPart.content && selectedPart.content.filter(item => item.type === 'exercise').length > 1 ? 's' : ''} d'apprentissage disponible{selectedPart.content && selectedPart.content.filter(item => item.type === 'exercise').length > 1 ? 's' : ''}
+                      {selectedPart.content ? selectedPart.content.length : 0} élément{selectedPart.content && selectedPart.content.length > 1 ? 's' : ''} d'apprentissage disponible{selectedPart.content && selectedPart.content.length > 1 ? 's' : ''}
                     </p>
                     {/* Indicateur de progression */}
                     <div className="mt-2 flex items-center text-xs text-gray-500">
@@ -147,10 +234,29 @@ export default function ThemeView() {
                     </div>
                   </div>
                   <button
-                    onClick={startLearning}
+                    onClick={() => {
+                      // Trouver le premier élément non complété
+                      let startIndex = 0;
+                      if (selectedPart.content) {
+                        const firstIncomplete = selectedPart.content.findIndex((item) => {
+                          if (item.type === 'lesson') {
+                            const lessonProgress = selectedPart.lessonProgress || [];
+                            return !lessonProgress.some(p => p.lesson_id === item.id && p.completed);
+                          } else if (item.type === 'exercise') {
+                            const exerciseProgress = selectedPart.exerciseProgress || [];
+                            return !exerciseProgress.some(p => p.exercise_id === item.id && p.completed);
+                          }
+                          return true;
+                        });
+                        if (firstIncomplete !== -1) {
+                          startIndex = firstIncomplete;
+                        }
+                      }
+                      startLearning(startIndex);
+                    }}
                     className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-center whitespace-nowrap shadow-md"
                   >
-                    Commencer l'apprentissage
+                    {selectedPart.progress > 0 ? 'Continuer l\'apprentissage' : 'Commencer l\'apprentissage'}
                   </button>
                 </div>
               </div>

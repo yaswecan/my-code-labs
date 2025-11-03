@@ -15,6 +15,7 @@ import {
   updateLessonProgress,
   getUserProgress,
   getPartProgress,
+  getThemeProgress,
 } from "./auth.js";
 
 const execPromise = promisify(exec);
@@ -477,9 +478,26 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// Endpoint pour récupérer la liste des thèmes
-app.get("/api/themes", (req, res) => {
-  res.json(exerciseData.themes || []);
+// Endpoint pour récupérer la liste des thèmes avec progression
+app.get("/api/themes", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const themesWithProgress = await Promise.all(
+      (exerciseData.themes || []).map(async (theme) => {
+        const progress = await getThemeProgress(userId, theme);
+        return {
+          ...theme,
+          progress,
+        };
+      })
+    );
+
+    res.json(themesWithProgress);
+  } catch (error) {
+    console.error("Erreur lors du chargement des thèmes:", error);
+    res.status(500).json({ error: "Erreur lors du chargement des thèmes" });
+  }
 });
 
 // Endpoint pour récupérer le contenu d'une partie spécifique
@@ -503,9 +521,14 @@ app.get(
     // Calculer la progression de la partie pour cet utilisateur
     const progress = await getPartProgress(userId, part);
 
+    // Récupérer la progression détaillée pour les éléments
+    const userProgress = await getUserProgress(userId);
+
     res.json({
       ...part,
       progress,
+      lessonProgress: userProgress.lessons,
+      exerciseProgress: userProgress.exercises,
     });
   }
 );

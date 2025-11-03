@@ -224,3 +224,49 @@ export async function getPartProgress(userId, part) {
     return 0;
   }
 }
+
+// Fonction pour calculer la progression d'un thème
+export async function getThemeProgress(userId, theme) {
+  try {
+    let totalItems = 0;
+    let totalCompleted = 0;
+
+    for (const part of theme.parts) {
+      const exerciseIds = part.content
+        .filter((item) => item.type === "exercise")
+        .map((item) => item.id);
+      const lessonIds = part.content
+        .filter((item) => item.type === "lesson")
+        .map((item) => item.id);
+
+      totalItems += exerciseIds.length + lessonIds.length;
+
+      if (exerciseIds.length > 0) {
+        const [exerciseResults] = await pool.execute(
+          `SELECT COUNT(*) as count FROM progress
+           WHERE user_id = ? AND exercise_id IN (${exerciseIds
+             .map(() => "?")
+             .join(",")}) AND completed = TRUE`,
+          [userId, ...exerciseIds]
+        );
+        totalCompleted += exerciseResults[0].count;
+      }
+
+      if (lessonIds.length > 0) {
+        const [lessonResults] = await pool.execute(
+          `SELECT COUNT(*) as count FROM lesson_progress
+           WHERE user_id = ? AND lesson_id IN (${lessonIds
+             .map(() => "?")
+             .join(",")}) AND completed = TRUE`,
+          [userId, ...lessonIds]
+        );
+        totalCompleted += lessonResults[0].count;
+      }
+    }
+
+    return totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0;
+  } catch (error) {
+    console.error("Erreur lors du calcul de la progression du thème:", error);
+    return 0;
+  }
+}
