@@ -16,11 +16,17 @@ export default defineConfig({
         target: "http://backend:4000",
         changeOrigin: true,
       },
+      // page principale phpMyAdmin
       "/phpmyadmin": {
         target: "http://backend:4000",
         changeOrigin: true,
       },
-      // ajouter ces lignes :
+      // phpMyAdmin parle beaucoup à /index.php
+      "/index.php": {
+        target: "http://backend:4000",
+        changeOrigin: true,
+      },
+      // ressources statiques que phpMyAdmin charge à la racine
       "/js": {
         target: "http://backend:4000",
         changeOrigin: true,

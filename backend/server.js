@@ -65,6 +65,7 @@ app.use(
     "/img",
     "/fonts",
     "/assets",
+    "/index.php",
   ],
   phpMyAdminProxy
 );
