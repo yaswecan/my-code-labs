@@ -5,6 +5,8 @@ import fs from "fs";
 import path from "path";
 import { promisify } from "util";
 import sanitizeHtml from "sanitize-html";
+import { createProxyMiddleware } from "http-proxy-middleware";
+import zlib from "zlib";
 import { pool, initDB } from "./db.js";
 import {
   authenticateToken,
@@ -33,6 +35,39 @@ const exercises = exerciseData.themes
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Proxy pour phpMyAdmin - doit être avant les autres routes
+const phpMyAdminProxy = createProxyMiddleware({
+  target: "http://phpmyadmin:80",
+  changeOrigin: true,
+  /**
+   * ICI le point important :
+   * on enlève /phpmyadmin quand la requête commence par /phpmyadmin
+   */
+  pathRewrite: {
+    "^/phpmyadmin": "",
+  },
+  onProxyRes(proxyRes) {
+    delete proxyRes.headers["x-frame-options"];
+    delete proxyRes.headers["content-security-policy"];
+    delete proxyRes.headers["x-content-security-policy"];
+    delete proxyRes.headers["x-webkit-csp"];
+  },
+});
+
+// IMPORTANT : mettre ça AVANT tes autres routes
+app.use(
+  [
+    "/phpmyadmin", // la page principale
+    "/js", // scripts que phpMyAdmin essaie de charger
+    "/css", // styles
+    "/themes", // thèmes phpMyAdmin
+    "/img",
+    "/fonts",
+    "/assets",
+  ],
+  phpMyAdminProxy
+);
 
 // Dossier temporaire pour les fichiers PHP (doit être monté via Docker)
 const TMP_DIR = "/app/sandbox";
@@ -793,7 +828,7 @@ app.get("/api/user/database-info", authenticateToken, async (req, res) => {
       dbPassword: dbInfo.db_password,
       dbHost: dbInfo.db_host,
       dbPort: dbInfo.db_port,
-      phpmyadminUrl: `http://localhost:8080`,
+      phpmyadminUrl: `/phpmyadmin`,
     });
   } catch (error) {
     console.error("Erreur lors de la récupération des infos DB:", error);

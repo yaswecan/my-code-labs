@@ -7,16 +7,13 @@ Chaque élève dispose de sa propre base de données MySQL isolée et sécurisé
 ## 🔑 Fonctionnalités
 
 ### 1. Base de Données Personnelle
-
 - **Création automatique** : Une base de données dédiée est créée lors de l'inscription
 - **Isolation complète** : Chaque élève ne peut accéder qu'à sa propre base
 - **Nom de la base** : `student_X_db` (où X est l'ID de l'élève)
 - **Utilisateur dédié** : `student_X` avec mot de passe sécurisé généré automatiquement
 
 ### 2. Accès aux Informations de Connexion
-
 Dans l'interface, cliquez sur **"🗄️ Ma Base de Données"** pour voir :
-
 - Nom de la base de données
 - Nom d'utilisateur
 - Mot de passe (avec option afficher/masquer)
@@ -24,7 +21,6 @@ Dans l'interface, cliquez sur **"🗄️ Ma Base de Données"** pour voir :
 - Exemple de code PHP de connexion
 
 ### 3. Interface phpMyAdmin
-
 - **URL** : http://localhost:8080
 - **Accès** : Utilisez vos identifiants personnels affichés dans l'interface
 - **Fonctionnalités** :
@@ -114,7 +110,6 @@ foreach ($users as $user) {
 ## 🛡️ Sécurité
 
 ### Bonnes Pratiques
-
 1. **Ne partagez jamais vos identifiants** de base de données
 2. **Utilisez toujours des requêtes préparées** (prepared statements) pour éviter les injections SQL
 3. **Validez les données** avant de les insérer dans la base
@@ -139,27 +134,23 @@ $stmt->execute(['email' => $email]);
 ## 📊 Gestion avec phpMyAdmin
 
 ### Se Connecter
-
 1. Ouvrez http://localhost:8080
 2. Sélectionnez "MySQL" comme type de serveur
 3. Entrez vos identifiants personnels
 4. Cliquez sur "Connexion"
 
 ### Créer une Table
-
 1. Sélectionnez votre base de données dans le menu de gauche
 2. Cliquez sur l'onglet "SQL"
 3. Entrez votre requête CREATE TABLE
 4. Cliquez sur "Exécuter"
 
 ### Visualiser les Données
-
 1. Sélectionnez votre table dans le menu de gauche
 2. Cliquez sur "Afficher" pour voir les données
 3. Utilisez les filtres pour rechercher des données spécifiques
 
 ### Exporter des Données
-
 1. Sélectionnez votre base de données
 2. Cliquez sur l'onglet "Exporter"
 3. Choisissez le format (SQL, CSV, etc.)
@@ -168,7 +159,6 @@ $stmt->execute(['email' => $email]);
 ## 🎓 Exercices Pratiques
 
 ### Exercice 1 : Créer une Table de Contacts
-
 ```sql
 CREATE TABLE contacts (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -181,7 +171,6 @@ CREATE TABLE contacts (
 ```
 
 ### Exercice 2 : Insérer des Données
-
 ```sql
 INSERT INTO contacts (nom, prenom, telephone, email) VALUES
 ('Dupont', 'Jean', '0123456789', 'jean.dupont@example.com'),
@@ -189,7 +178,6 @@ INSERT INTO contacts (nom, prenom, telephone, email) VALUES
 ```
 
 ### Exercice 3 : Requêtes de Sélection
-
 ```sql
 -- Tous les contacts
 SELECT * FROM contacts;
@@ -204,18 +192,15 @@ SELECT * FROM contacts WHERE nom LIKE 'D%';
 ## 🔧 Dépannage
 
 ### Problème : Impossible de se connecter
-
 - Vérifiez que vous utilisez les bons identifiants
 - Assurez-vous que le conteneur MySQL est en cours d'exécution
 - Vérifiez que le port 3306 n'est pas bloqué
 
 ### Problème : Erreur "Access denied"
-
 - Vérifiez que vous utilisez le bon nom d'utilisateur et mot de passe
 - Assurez-vous d'utiliser votre base de données personnelle
 
 ### Problème : phpMyAdmin ne se charge pas
-
 - Vérifiez que le conteneur phpMyAdmin est en cours d'exécution
 - Essayez de rafraîchir la page
 - Vérifiez que le port 8080 est disponible

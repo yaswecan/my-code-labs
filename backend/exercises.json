@@ -216,6 +216,212 @@
           ]
         }
       ]
+    },
+    {
+  "id": "mysql-advanced",
+  "title": "Manipuler MySQL avec PHP (PDO)",
+  "description": "Apprenez à vous connecter à une base MySQL, lire des données et faire des opérations INSERT, UPDATE et DELETE en toute sécurité.",
+  "parts": [
+    {
+      "id": "part1",
+      "title": "Se connecter à MySQL avec PDO",
+      "description": "Comprenez comment établir une connexion sécurisée à MySQL depuis PHP.",
+      "order": 1,
+      "content": [
+        {
+          "type": "lesson",
+          "id": "pdo-intro",
+          "title": "Pourquoi utiliser PDO ?",
+          "content": "PDO (PHP Data Objects) est une interface qui permet d'accéder à plusieurs bases de données avec le même code. L'avantage principal est la sécurité (requêtes préparées) et la portabilité. Avec PDO, on crée d'abord un objet PDO avec le DSN, le nom d'utilisateur et le mot de passe.",
+          "question": "Quel est l'avantage principal de PDO par rapport à mysqli ?",
+          "options": [
+            "PDO fonctionne uniquement avec MySQL",
+            "PDO permet de changer de base de données plus facilement",
+            "PDO ne nécessite pas de mot de passe",
+            "PDO est plus rapide dans tous les cas"
+          ],
+          "correctAnswer": 1,
+          "testType": "mcq"
+        },
+        {
+          "type": "exercise",
+          "id": "pdo-connection",
+          "title": "Établir une connexion PDO",
+          "description": "Créez un script qui se connecte à la base 'monapp' sur l'hôte 'db' avec l'utilisateur 'user' et le mot de passe 'password'.",
+          "difficulty": "beginner",
+          "category": "database",
+          "instructions": "Utilisez un bloc try/catch pour afficher un message d'erreur si la connexion échoue.",
+          "initialCode": "<?php\n$host = 'db';\n$dbname = 'monapp';\n$user = 'user';\n$pass = 'password';\n\ntry {\n    $pdo = new PDO(\"mysql:host=$host;dbname=$dbname;charset=utf8mb4\", $user, $pass);\n    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);\n    echo \"Connexion réussie\";\n} catch (PDOException $e) {\n    echo \"Erreur de connexion : \" . $e->getMessage();\n}\n?>",
+          "expectedOutput": "Connexion réussie",
+          "testType": "output",
+          "hints": [
+            "Utilisez new PDO(...)",
+            "Ajoutez charset=utf8mb4 dans le DSN",
+            "Attrapez l'exception PDOException"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part2",
+      "title": "Consulter des données (SELECT)",
+      "description": "Récupérez des lignes depuis une table MySQL et affichez-les.",
+      "order": 2,
+      "content": [
+        {
+          "type": "lesson",
+          "id": "pdo-select",
+          "title": "Exécuter une requête SELECT",
+          "content": "Pour lire des données, on utilise $pdo->query() pour des requêtes simples ou $pdo->prepare() + execute() pour des requêtes avec paramètres. On récupère les lignes avec fetch() ou fetchAll().",
+          "question": "Quelle méthode PDO utilise-t-on pour récupérer plusieurs lignes d'un coup ?",
+          "options": [
+            "getRows()",
+            "fetchRow()",
+            "fetchAll()",
+            "queryAll()"
+          ],
+          "correctAnswer": 2,
+          "testType": "mcq"
+        },
+        {
+          "type": "exercise",
+          "id": "select-users",
+          "title": "Lister les utilisateurs",
+          "description": "Affichez tous les utilisateurs de la table users.",
+          "difficulty": "intermediate",
+          "category": "database",
+          "instructions": "Écrivez un script qui se connecte à la base de données, exécute SELECT * FROM users et affiche chaque ligne (id et nom).",
+          "initialCode": "<?php\n// Connexion PDO ici\n\n$sql = \"SELECT id, name FROM users\";\n$stmt = $pdo->query($sql);\n$users = $stmt->fetchAll(PDO::FETCH_ASSOC);\n\nforeach ($users as $user) {\n    echo $user['id'] . ' - ' . $user['name'] . \"\\n\";\n}\n?>",
+          "expectedOutput": "1 - Alice\n2 - Bob",
+          "testType": "output",
+          "hints": [
+            "$pdo->query() suffit pour une requête sans paramètre",
+            "fetchAll(PDO::FETCH_ASSOC) retourne un tableau associatif",
+            "Parcourez le tableau avec foreach"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part3",
+      "title": "Insérer des données (INSERT)",
+      "description": "Apprenez à ajouter de nouvelles lignes dans une table en évitant les injections SQL.",
+      "order": 3,
+      "content": [
+        {
+          "type": "lesson",
+          "id": "pdo-insert",
+          "title": "Requêtes INSERT préparées",
+          "content": "Pour insérer de manière sécurisée, on utilise les requêtes préparées. On écrit d'abord la requête avec des marqueurs (ex. :name), on prépare, puis on exécute en passant les valeurs.",
+          "question": "Pourquoi utilise-t-on les requêtes préparées ?",
+          "options": [
+            "Pour rendre le code plus long",
+            "Pour éviter les injections SQL",
+            "Pour ne pas avoir besoin de connexion",
+            "Pour supprimer la base automatiquement"
+          ],
+          "correctAnswer": 1,
+          "testType": "mcq"
+        },
+        {
+          "type": "exercise",
+          "id": "insert-user",
+          "title": "Ajouter un utilisateur",
+          "description": "Insérez un nouvel utilisateur dans la table users.",
+          "difficulty": "intermediate",
+          "category": "database",
+          "instructions": "Écrivez un script qui insère un utilisateur avec un nom et un email dans la table users en utilisant une requête préparée.",
+          "initialCode": "<?php\n// Connexion PDO\n\n$name = 'Jean';\n$email = 'jean@example.com';\n\n$sql = \"INSERT INTO users (name, email) VALUES (:name, :email)\";\n$stmt = $pdo->prepare($sql);\n$success = $stmt->execute([\n    ':name' => $name,\n    ':email' => $email\n]);\n\nif ($success) {\n    echo \"Utilisateur inséré\";\n} else {\n    echo \"Erreur d'insertion\";\n}\n?>",
+          "expectedOutput": "Utilisateur inséré",
+          "testType": "output",
+          "hints": [
+            "Utilisez $pdo->prepare()",
+            "Exécutez avec un tableau associatif",
+            "Vérifiez le retour de execute()"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part4",
+      "title": "Mettre à jour et supprimer (UPDATE / DELETE)",
+      "description": "Modifiez ou supprimez des enregistrements existants à l'aide de PDO.",
+      "order": 4,
+      "content": [
+        {
+          "type": "lesson",
+          "id": "pdo-update-delete",
+          "title": "UPDATE et DELETE avec paramètres",
+          "content": "UPDATE et DELETE se font exactement comme INSERT : on prépare la requête avec des paramètres, puis on exécute. On peut vérifier combien de lignes ont été affectées avec rowCount().",
+          "question": "Quelle méthode permet de savoir combien de lignes ont été modifiées ?",
+          "options": [
+            "affectedRows()",
+            "rowCount()",
+            "countRows()",
+            "getRows()"
+          ],
+          "correctAnswer": 1,
+          "testType": "mcq"
+        },
+        {
+          "type": "exercise",
+          "id": "update-user",
+          "title": "Mettre à jour un utilisateur",
+          "description": "Modifiez l'email d'un utilisateur existant.",
+          "difficulty": "intermediate",
+          "category": "database",
+          "instructions": "Écrivez un script qui prend un id d'utilisateur (par exemple 1) et met à jour son email.",
+          "initialCode": "<?php\n// Connexion PDO\n\n$id = 1;\n$newEmail = 'nouvel-email@example.com';\n\n$sql = \"UPDATE users SET email = :email WHERE id = :id\";\n$stmt = $pdo->prepare($sql);\n$stmt->execute([\n    ':email' => $newEmail,\n    ':id' => $id\n]);\n\necho $stmt->rowCount() . \" ligne(s) modifiée(s)\";\n?>",
+          "expectedOutput": "1 ligne(s) modifiée(s)",
+          "testType": "output",
+          "hints": [
+            "N'oubliez pas le WHERE pour ne pas tout mettre à jour",
+            "Utilisez des paramètres nommés",
+            "rowCount() indique le nombre de lignes affectées"
+          ]
+        },
+        {
+          "type": "exercise",
+          "id": "delete-user",
+          "title": "Supprimer un utilisateur",
+          "description": "Supprimez un utilisateur grâce à son id.",
+          "difficulty": "intermediate",
+          "category": "database",
+          "instructions": "Écrivez un script qui supprime un utilisateur dont l'id est 3.",
+          "initialCode": "<?php\n// Connexion PDO\n\n$id = 3;\n$sql = \"DELETE FROM users WHERE id = :id\";\n$stmt = $pdo->prepare($sql);\n$stmt->execute([':id' => $id]);\n\necho $stmt->rowCount() . \" ligne(s) supprimée(s)\";\n?>",
+          "expectedOutput": "1 ligne(s) supprimée(s)",
+          "testType": "output",
+          "hints": [
+            "Toujours mettre un WHERE dans un DELETE",
+            "Utilisez une requête préparée pour le paramètre id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quiz-mysql",
+      "title": "Quiz : PDO et MySQL",
+      "description": "Vérifiez que vous savez lire, insérer, mettre à jour et supprimer.",
+      "order": 5,
+      "content": [
+        {
+          "type": "lesson",
+          "id": "security-prepared",
+          "title": "Sécurité et injections SQL",
+          "content": "Les injections SQL arrivent quand on insère directement des valeurs venant de l'utilisateur dans une requête. Les requêtes préparées évitent ce problème en séparant la requête des données.",
+          "question": "Quelle est la meilleure pratique pour éviter les injections SQL en PDO ?",
+          "options": [
+            "Concaténer les valeurs dans la requête",
+            "Utiliser les requêtes préparées avec execute",
+            "Désactiver MySQL",
+            "Utiliser uniquement des SELECT"
+          ],
+          "correctAnswer": 1,
+          "testType": "mcq"
+        }
+      ]
     }
+  ]
+}
   ]
 }

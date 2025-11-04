@@ -22,6 +22,7 @@ services:
       - "4000:4000"
     environment:
       - DATABASE_URL=mysql://user:password@db:3306/monapp
+      - PHP_MY_ADMIN_URL=http://phpmyadmin:80
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -37,6 +38,7 @@ services:
     user: "1000:0"
 
   php-sandbox:
+    build: ./php-sandbox
     image: php:8.2-cli
     container_name: php_sandbox
     stdin_open: true

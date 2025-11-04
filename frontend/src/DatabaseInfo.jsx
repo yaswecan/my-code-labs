@@ -6,6 +6,7 @@ export default function DatabaseInfo() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showPhpMyAdmin, setShowPhpMyAdmin] = useState(false);
   const { getAuthHeaders } = useAuth();
 
   useEffect(() => {
@@ -183,20 +184,64 @@ export default function DatabaseInfo() {
             🌐 Accès phpMyAdmin
           </h2>
           <p className="text-gray-700 mb-4">
-            Gérez votre base de données visuellement avec phpMyAdmin
+            Gérez votre base de données visuellement avec phpMyAdmin directement dans l'application
           </p>
-          <a
-            href={dbInfo.phpmyadminUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-center"
+          <button
+            onClick={() => setShowPhpMyAdmin(!showPhpMyAdmin)}
+            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
           >
-            🚀 Ouvrir phpMyAdmin
-          </a>
+            {showPhpMyAdmin ? "📊 Masquer phpMyAdmin" : "🚀 Ouvrir phpMyAdmin"}
+          </button>
           <p className="text-sm text-gray-600 mt-3">
-            💡 Utilisez les identifiants ci-dessus pour vous connecter
+            💡 Utilisez les identifiants ci-dessus pour vous connecter à phpMyAdmin
           </p>
         </div>
+
+        {/* phpMyAdmin intégré */}
+{showPhpMyAdmin && (
+  <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-xl font-semibold text-gray-800">
+        🌐 phpMyAdmin - {dbInfo.dbName}
+      </h2>
+      <button
+        onClick={() => setShowPhpMyAdmin(false)}
+        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+      >
+        ✕ Fermer
+      </button>
+    </div>
+
+    <div className="bg-gray-100 p-3 rounded mb-3">
+      <p className="text-sm text-gray-700">
+        <strong>Serveur:</strong> db |{" "}
+        <strong className="ml-2">Utilisateur:</strong> {dbInfo.dbUser} |{" "}
+        <strong className="ml-2">Base:</strong> {dbInfo.dbName}
+      </p>
+    </div>
+
+    <div
+      className="border-4 border-gray-300 rounded-lg overflow-hidden"
+      style={{ height: "600px" }}
+    >
+      <iframe
+        // si ton API te renvoie l'URL, utilise-la, sinon fallback sur le proxy
+        src={"/phpmyadmin/"}
+        className="w-full h-full"
+        title="phpMyAdmin"
+        // pas de sandbox ici pour laisser phpMyAdmin bosser
+      />
+    </div>
+
+    <div className="mt-3 p-3 bg-blue-50 rounded">
+      <p className="text-sm text-blue-800">
+        💡 <strong>Instructions:</strong> Utilisez les identifiants affichés ci-dessus pour vous connecter à phpMyAdmin.
+        Serveur: <strong>db</strong>, Utilisateur: <strong>{dbInfo.dbUser}</strong>, Mot de passe: (voir ci-dessus)
+      </p>
+    </div>
+  </div>
+)}
+
 
         {/* Exemple de code PHP */}
         <div className="bg-white rounded-lg shadow-md p-6">

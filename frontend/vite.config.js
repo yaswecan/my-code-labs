@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // listen on 0.0.0.0
+    host: true,
     port: 5173,
     strictPort: true,
     watch: {
@@ -13,6 +13,31 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
+        target: "http://backend:4000",
+        changeOrigin: true,
+      },
+      "/phpmyadmin": {
+        target: "http://backend:4000",
+        changeOrigin: true,
+      },
+      // ajouter ces lignes :
+      "/js": {
+        target: "http://backend:4000",
+        changeOrigin: true,
+      },
+      "/css": {
+        target: "http://backend:4000",
+        changeOrigin: true,
+      },
+      "/themes": {
+        target: "http://backend:4000",
+        changeOrigin: true,
+      },
+      "/img": {
+        target: "http://backend:4000",
+        changeOrigin: true,
+      },
+      "/assets": {
         target: "http://backend:4000",
         changeOrigin: true,
       },
