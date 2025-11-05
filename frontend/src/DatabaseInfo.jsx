@@ -220,6 +220,13 @@ try {
     );
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     echo "✅ Connexion réussie !";
+
+    // Exemple d'exécution d'une requête
+    $stmt = $pdo->prepare("SELECT * FROM eleve;");
+    $stmt->execute();
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo "Nombre d'élèves : " . count($result);
+
 } catch(PDOException $e) {
     echo "❌ Erreur : " . $e->getMessage();
 }
