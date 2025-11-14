@@ -110,7 +110,7 @@ function App() {
             🗄️ Ma Base de Données
           </button>
           <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-600">
-            <span className="text-sm">👤 {user.username}</span>
+            <span className="text-sm">{user.username}</span>
             <button
               onClick={logout}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm"

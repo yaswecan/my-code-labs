@@ -215,10 +215,10 @@ export default function LearningMode({ themeId, partId, onBack, startIndex = 0 }
                 <div
                   key={item.id}
                   className={`p-3 rounded-lg border ${
-                    index === currentIndex
+                    isCompleted
+                      ? "border-green-500 bg-green-200"
+                      : index === currentIndex
                       ? "border-blue-500 bg-blue-50"
-                      : isCompleted
-                      ? "border-green-500 bg-green-50"
                       : "border-gray-200 bg-gray-50"
                   }`}
                 >

@@ -166,8 +166,12 @@ export default function ThemeView() {
                     <div
                       key={part.id}
                       onClick={() => selectPart(part)}
-                      className={`p-4 bg-white rounded-lg border cursor-pointer hover:shadow-md transition-shadow ${
-                        selectedPart?.id === part.id ? "border-blue-500 bg-blue-50" : "border-gray-200"
+                      className={`p-4 rounded-lg border cursor-pointer hover:shadow-md transition-shadow ${
+                        selectedPart?.id === part.id
+                          ? "border-blue-500 bg-blue-50"
+                          : part.progress === 100
+                          ? "border-green-500 bg-green-100"
+                          : "bg-white border-gray-200"
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -191,8 +195,8 @@ export default function ThemeView() {
                             <span className="mr-2">Progression:</span>
                             <div className="flex items-center flex-1">
                               <div className="flex-1 h-2 bg-gray-200 rounded-full mr-2">
-                                <div 
-                                  className="h-2 bg-green-500 rounded-full transition-all duration-300" 
+                                <div
+                                  className="h-2 bg-green-500 rounded-full transition-all duration-300"
                                   style={{ width: `${part.progress || 0}%` }}
                                 ></div>
                               </div>
@@ -209,6 +213,93 @@ export default function ThemeView() {
                     </div>
                   ))}
               </div>
+
+              {/* Liste des exercices et leçons de la partie sélectionnée */}
+              {selectedPart && selectedPart.content && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    Exercices et Leçons - {selectedPart.title}
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedPart.content.map((item, index) => {
+                      // Vérifier si l'élément est validé
+                      const isCompleted = item.type === "lesson"
+                        ? selectedPart.lessonProgress?.some(lp => lp.lesson_id === item.id && lp.completed)
+                        : selectedPart.exerciseProgress?.some(ep => ep.exercise_id === item.id && ep.completed);
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            // Si l'élément est déjà validé, commencer du suivant, sinon de celui-ci
+                            let startIndex = index;
+                            if (isCompleted) {
+                              // Trouver le prochain élément non complété
+                              const nextIncomplete = selectedPart.content.findIndex((nextItem, nextIndex) => {
+                                if (nextIndex <= index) return false; // Ne pas revenir en arrière
+                                const nextCompleted = nextItem.type === "lesson"
+                                  ? selectedPart.lessonProgress?.some(lp => lp.lesson_id === nextItem.id && lp.completed)
+                                  : selectedPart.exerciseProgress?.some(ep => ep.exercise_id === nextItem.id && ep.completed);
+                                return !nextCompleted;
+                              });
+                              if (nextIncomplete !== -1) {
+                                startIndex = nextIncomplete;
+                              } else {
+                                // Tous les suivants sont complétés, rester sur le dernier
+                                startIndex = selectedPart.content.length - 1;
+                              }
+                            }
+                            startLearning(startIndex);
+                          }}
+                          className={`p-4 rounded-lg border cursor-pointer hover:shadow-md transition-shadow ${
+                            isCompleted ? "border-green-500 bg-green-100" : "bg-white border-gray-200 hover:border-blue-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center mb-2">
+                                <span className={`text-xs px-2 py-1 rounded-full mr-2 ${
+                                  item.type === "lesson"
+                                    ? "bg-purple-100 text-purple-800"
+                                    : "bg-orange-100 text-orange-800"
+                                }`}>
+                                  {item.type === "lesson" ? "📖 Leçon" : "💻 Exercice"}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  Étape {index + 1}
+                                </span>
+                                {isCompleted && (
+                                  <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                    ✓ Validé
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="font-semibold text-gray-800">
+                                {item.title}
+                              </h4>
+                              {item.type === "exercise" && item.instructions && (
+                                <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+                                  {item.instructions}
+                                </p>
+                              )}
+                              {item.type === "lesson" && item.content && (
+                                <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+                                  {item.content.substring(0, 100)}...
+                                </p>
+                              )}
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-2xl">
+                                {isCompleted ? "✅" : item.type === "lesson" ? "📖" : "💻"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Bouton pour commencer les exercices - maintenant sticky en bas */}
