@@ -30,13 +30,14 @@ async function initDB() {
   try {
     const connection = await pool.getConnection();
 
-    // Créer la table users avec colonnes pour DB élève
+    // Créer la table users avec colonnes pour DB élève et rôle
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
+        role ENUM('student', 'teacher') DEFAULT 'student',
         db_name VARCHAR(100),
         db_user VARCHAR(100),
         db_password VARCHAR(255),

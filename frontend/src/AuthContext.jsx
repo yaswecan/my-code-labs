@@ -31,7 +31,12 @@ export const AuthProvider = ({ children }) => {
           if (response.ok) {
             // Le token est valide, récupérer les infos utilisateur du token
             const payload = JSON.parse(atob(storedToken.split('.')[1]));
-            setUser(payload);
+            setUser({
+              id: payload.id,
+              username: payload.username,
+              email: payload.email,
+              role: payload.role || 'student'
+            });
             setToken(storedToken);
           } else {
             // Token invalide, le supprimer
@@ -65,7 +70,12 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.error || 'Erreur de connexion');
     }
 
-    setUser(data.user);
+    setUser({
+      id: data.user.id,
+      username: data.user.username,
+      email: data.user.email,
+      role: data.user.role || 'student'
+    });
     setToken(data.token);
     localStorage.setItem('token', data.token);
 
@@ -87,7 +97,12 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.error || 'Erreur d\'inscription');
     }
 
-    setUser(data.user);
+    setUser({
+      id: data.user.id,
+      username: data.user.username,
+      email: data.user.email,
+      role: data.user.role || 'student'
+    });
     setToken(data.token);
     localStorage.setItem('token', data.token);
 

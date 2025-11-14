@@ -19,7 +19,12 @@ export async function verifyPassword(password, hash) {
 // Fonction pour générer un token JWT
 export function generateToken(user) {
   return jwt.sign(
-    { id: user.id, username: user.username, email: user.email },
+    {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role || "student",
+    },
     JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -52,15 +57,23 @@ export function authenticateToken(req, res, next) {
   next();
 }
 
+// Middleware pour vérifier que l'utilisateur est un enseignant
+export function requireTeacher(req, res, next) {
+  if (req.user.role !== "teacher") {
+    return res.status(403).json({ error: "Accès réservé aux enseignants" });
+  }
+  next();
+}
+
 // Fonction pour créer un utilisateur
-export async function createUser(username, email, password) {
+export async function createUser(username, email, password, role = "student") {
   const hashedPassword = await hashPassword(password);
 
   try {
     // Créer l'utilisateur d'abord
     const [result] = await pool.execute(
-      "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-      [username, email, hashedPassword]
+      "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
+      [username, email, hashedPassword, role]
     );
 
     const userId = result.insertId;
@@ -103,7 +116,7 @@ export async function createUser(username, email, password) {
 // Fonction pour authentifier un utilisateur
 export async function authenticateUser(usernameOrEmail, password) {
   const [rows] = await pool.execute(
-    "SELECT id, username, email, password_hash FROM users WHERE username = ? OR email = ?",
+    "SELECT id, username, email, password_hash, role FROM users WHERE username = ? OR email = ?",
     [usernameOrEmail, usernameOrEmail]
   );
 
@@ -118,7 +131,12 @@ export async function authenticateUser(usernameOrEmail, password) {
     return null;
   }
 
-  return { id: user.id, username: user.username, email: user.email };
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+  };
 }
 
 // Fonction pour mettre à jour la progression d'un exercice

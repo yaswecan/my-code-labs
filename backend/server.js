@@ -10,6 +10,7 @@ import zlib from "zlib";
 import { pool, initDB } from "./db.js";
 import {
   authenticateToken,
+  requireTeacher,
   createUser,
   authenticateUser,
   generateToken,
@@ -1072,6 +1073,186 @@ app.get("/api/user/database-info", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+// Routes pour les enseignants
+
+// Endpoint pour récupérer la liste des élèves
+app.get(
+  "/api/teacher/students",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    try {
+      const [rows] = await pool.execute(
+        "SELECT id, username, email, created_at FROM users WHERE role = 'student' ORDER BY created_at DESC"
+      );
+
+      res.json(rows);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des élèves:", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// Endpoint pour récupérer la progression détaillée d'un élève
+app.get(
+  "/api/teacher/student/:id/progress",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    const studentId = req.params.id;
+
+    try {
+      // Vérifier que l'élève existe
+      const [studentRows] = await pool.execute(
+        "SELECT id, username, email FROM users WHERE id = ? AND role = 'student'",
+        [studentId]
+      );
+
+      if (studentRows.length === 0) {
+        return res.status(404).json({ error: "Élève non trouvé" });
+      }
+
+      const student = studentRows[0];
+
+      // Récupérer la progression des exercices
+      const [exerciseProgress] = await pool.execute(
+        "SELECT exercise_id, completed, score, attempts, last_attempt FROM progress WHERE user_id = ?",
+        [studentId]
+      );
+
+      // Récupérer la progression des leçons
+      const [lessonProgress] = await pool.execute(
+        "SELECT lesson_id, completed, score, attempts, last_attempt FROM lesson_progress WHERE user_id = ?",
+        [studentId]
+      );
+
+      // Calculer les statistiques générales
+      const totalExercises = exerciseProgress.length;
+      const completedExercises = exerciseProgress.filter(
+        (p) => p.completed
+      ).length;
+      const totalLessons = lessonProgress.length;
+      const completedLessons = lessonProgress.filter((p) => p.completed).length;
+
+      // Calculer la progression par thème (moyenne pondérée des thèmes)
+      const themesWithProgress = await Promise.all(
+        (exerciseData.themes || []).map(async (theme) => {
+          const progress = await getThemeProgress(studentId, theme);
+          return {
+            id: theme.id,
+            title: theme.title,
+            progress,
+          };
+        })
+      );
+
+      // Recalculer la progression globale en utilisant la moyenne des thèmes
+      const totalThemes = themesWithProgress.length;
+      const averageThemeProgress =
+        totalThemes > 0
+          ? Math.round(
+              themesWithProgress.reduce(
+                (sum, theme) => sum + theme.progress,
+                0
+              ) / totalThemes
+            )
+          : 0;
+
+      res.json({
+        student: {
+          id: student.id,
+          username: student.username,
+          email: student.email,
+        },
+        statistics: {
+          totalExercises,
+          completedExercises,
+          totalLessons,
+          completedLessons,
+          overallProgress: averageThemeProgress,
+        },
+        themes: themesWithProgress,
+        exercises: exerciseProgress,
+        lessons: lessonProgress,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération de la progression:", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// Endpoint pour récupérer un aperçu de la classe
+app.get(
+  "/api/teacher/overview",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    try {
+      // Récupérer tous les élèves
+      const [students] = await pool.execute(
+        "SELECT id, username FROM users WHERE role = 'student'"
+      );
+
+      // Calculer les statistiques pour chaque élève
+      const studentStats = await Promise.all(
+        students.map(async (student) => {
+          const [exerciseProgress] = await pool.execute(
+            "SELECT COUNT(*) as total, SUM(completed) as completed FROM progress WHERE user_id = ?",
+            [student.id]
+          );
+
+          const [lessonProgress] = await pool.execute(
+            "SELECT COUNT(*) as total, SUM(completed) as completed FROM lesson_progress WHERE user_id = ?",
+            [student.id]
+          );
+
+          const totalItems =
+            exerciseProgress[0].total + lessonProgress[0].total;
+          const completedItems =
+            (exerciseProgress[0].completed || 0) +
+            (lessonProgress[0].completed || 0);
+
+          return {
+            id: student.id,
+            username: student.username,
+            totalExercises: exerciseProgress[0].total,
+            completedExercises: exerciseProgress[0].completed || 0,
+            totalLessons: lessonProgress[0].total,
+            completedLessons: lessonProgress[0].completed || 0,
+            progress: Math.min(
+              100,
+              totalItems > 0
+                ? Math.round((completedItems / totalItems) * 100)
+                : 0
+            ),
+          };
+        })
+      );
+
+      // Statistiques globales
+      const totalStudents = students.length;
+      const averageProgress =
+        studentStats.length > 0
+          ? Math.round(
+              studentStats.reduce((sum, s) => sum + s.progress, 0) /
+                studentStats.length
+            )
+          : 0;
+
+      res.json({
+        totalStudents,
+        averageProgress,
+        students: studentStats,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'aperçu:", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
 
 app.listen(4000, () => {
   console.log("🚀 Backend running on http://localhost:4000");

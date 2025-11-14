@@ -3,11 +3,12 @@ import { useAuth } from "./AuthContext.jsx";
 import MultiFileEditor from "./MultiFileEditor.jsx";
 import ThemeView from "./ThemeView.jsx";
 import DatabaseInfo from "./DatabaseInfo.jsx";
+import TeacherDashboard from "./TeacherDashboard.jsx";
 import Login from "./Login.jsx";
 import Register from "./Register.jsx";
 
 function App() {
-  const [mode, setMode] = useState("editor"); // "editor", "themes", "database"
+  const [mode, setMode] = useState("editor"); // "editor", "themes", "database", "teacher"
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const { user, logout, loading } = useAuth();
@@ -109,8 +110,22 @@ function App() {
           >
             🗄️ Ma Base de Données
           </button>
+          {user.role === "teacher" && (
+            <button
+              onClick={() => setMode("teacher")}
+              className={`px-4 py-2 rounded ${
+                mode === "teacher"
+                  ? "bg-orange-600 hover:bg-orange-700"
+                  : "bg-gray-600 hover:bg-gray-700"
+              }`}
+            >
+              👨‍🏫 Tableau de Bord Enseignant
+            </button>
+          )}
           <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-600">
-            <span className="text-sm">{user.username}</span>
+            <span className="text-sm">
+              {user.username} ({user.role === 'teacher' ? 'Enseignant' : 'Élève'})
+            </span>
             <button
               onClick={logout}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm"
@@ -127,8 +142,12 @@ function App() {
           <MultiFileEditor />
         ) : mode === "themes" ? (
           <ThemeView />
-        ) : (
+        ) : mode === "database" ? (
           <DatabaseInfo />
+        ) : mode === "teacher" ? (
+          <TeacherDashboard />
+        ) : (
+          <MultiFileEditor />
         )}
       </div>
     </div>
