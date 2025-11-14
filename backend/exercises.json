@@ -422,6 +422,296 @@
       ]
     }
   ]
-}
+},
+{
+    "id": "db-design-basics",
+    "title": "Comprendre la conception de bases de données",
+    "description": "Apprenez les concepts fondamentaux des bases de données relationnelles : tables, clés primaires, clés étrangères, relations et normalisation.",
+    "parts": [
+      {
+        "id": "part1",
+        "title": "Introduction aux bases de données relationnelles",
+        "description": "Découvrez ce qu'est une base de données relationnelle et pourquoi on l'utilise.",
+        "order": 1,
+        "content": [
+          {
+            "type": "lesson",
+            "id": "db-what-is",
+            "title": "Qu'est-ce qu'une base de données relationnelle ?",
+            "content": "Une base de données relationnelle est un ensemble de tables qui contiennent des données organisées en lignes et colonnes. Chaque table représente un type d'information (par exemple : clients, commandes) et les relations entre les tables sont définies par des clés (primaires et étrangères).",
+            "question": "À quoi sert une base de données relationnelle ?",
+            "options": [
+              "À stocker des fichiers images uniquement",
+              "À organiser des données en tables liées entre elles",
+              "À remplacer le code PHP",
+              "À générer automatiquement du HTML"
+            ],
+            "correctAnswer": 1,
+            "testType": "mcq"
+          },
+          {
+            "type": "lesson",
+            "id": "db-keys",
+            "title": "Clé primaire et clé étrangère",
+            "content": "Une clé primaire identifie de manière unique chaque ligne d'une table (par exemple id_client). Une clé étrangère est un champ qui référence la clé primaire d'une autre table (par exemple client_id dans la table commandes). Cela permet de relier les données entre elles.",
+            "question": "Quel est le rôle d'une clé étrangère ?",
+            "options": [
+              "Identifier chaque ligne de la table",
+              "Relier une table à une autre table",
+              "Supprimer automatiquement les lignes",
+              "Crypter les données"
+            ],
+            "correctAnswer": 1,
+            "testType": "mcq"
+          },
+          {
+            "type": "exercise",
+            "id": "db-identify-keys",
+            "title": "Identifier les clés dans un modèle simple",
+            "description": "Repérez la clé primaire et la clé étrangère dans un petit modèle.",
+            "difficulty": "beginner",
+            "category": "database-design",
+            "instructions": "On a deux tables :\n\n- clients(id, nom, email)\n- commandes(id, date_commande, client_id)\n\nRépondez :\n1. Quelle est la clé primaire de la table clients ?\n2. Quelle est la clé étrangère dans la table commandes ?",
+            "expectedOutput": "1. Clé primaire clients : id\n2. Clé étrangère commandes : client_id",
+            "testType": "text",
+            "hints": [
+              "La clé primaire identifie chaque ligne de la table",
+              "La clé étrangère fait référence à la clé primaire d'une autre table"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "part2",
+        "title": "Notions de normalisation",
+        "description": "Comprenez pourquoi on évite les données dupliquées et les anomalies de mise à jour.",
+        "order": 2,
+        "content": [
+          {
+            "type": "lesson",
+            "id": "normalization-basics",
+            "title": "Pourquoi normaliser une base de données ?",
+            "content": "La normalisation consiste à organiser les données pour limiter les duplications et éviter les anomalies (insertion, mise à jour, suppression). Par exemple, on évite de répéter l'adresse d'un client dans chaque commande en la stockant dans la table clients.",
+            "question": "Quel est l'un des objectifs de la normalisation ?",
+            "options": [
+              "Rendre le SQL illisible",
+              "Multiplier le nombre de tables sans raison",
+              "Réduire les duplications de données",
+              "Supprimer les clés primaires"
+            ],
+            "correctAnswer": 2,
+            "testType": "mcq"
+          },
+          {
+            "type": "exercise",
+            "id": "normalization-example",
+            "title": "Repérer une mauvaise conception",
+            "description": "Analysez une table contenant des données dupliquées.",
+            "difficulty": "beginner",
+            "category": "database-design",
+            "instructions": "On a une table commandes avec les colonnes : id_commande, date_commande, client_nom, client_email.\nExpliquez en une ou deux phrases pourquoi ce modèle peut poser problème, et proposez une amélioration simple.",
+            "expectedOutput": "Les informations client sont dupliquées à chaque commande. On devrait créer une table clients séparée, puis référencer le client dans la table commandes avec une clé étrangère (client_id).",
+            "testType": "text",
+            "hints": [
+              "Demandez-vous ce qui se passe si le client change d'email",
+              "Pensez à séparer les informations qui se répètent dans une autre table"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "quiz-db-design",
+        "title": "Quiz : bases de la conception",
+        "description": "Vérifiez votre compréhension des concepts vus.",
+        "order": 3,
+        "content": [
+          {
+            "type": "lesson",
+            "id": "db-design-quiz-1",
+            "title": "Quiz de fin de module",
+            "content": "Répondez aux questions pour valider votre compréhension des bases de données relationnelles.",
+            "question": "Que représente une ligne dans une table ?",
+            "options": [
+              "Un type de données",
+              "Une contrainte de clé",
+              "Un enregistrement (un élément concret, par exemple un client)",
+              "Une connexion à la base"
+            ],
+            "correctAnswer": 2,
+            "testType": "mcq"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "merise-method",
+    "title": "Concevoir une base de données avec la méthode Merise",
+    "description": "Apprenez à utiliser la méthode Merise pour concevoir une base de données : MCD, MLD et MPD.",
+    "parts": [
+      {
+        "id": "part1",
+        "title": "Introduction à Merise",
+        "description": "Comprenez les grandes étapes de la méthode Merise et le rôle de chaque modèle.",
+        "order": 1,
+        "content": [
+          {
+            "type": "lesson",
+            "id": "merise-overview",
+            "title": "Les trois niveaux de Merise",
+            "content": "Merise est une méthode de conception qui distingue plusieurs niveaux :\n- Le MCD (Modèle Conceptuel de Données) : on décrit les entités et les associations, indépendamment de la base de données utilisée.\n- Le MLD (Modèle Logique de Données) : on adapte le MCD au modèle relationnel (tables, clés primaires, clés étrangères).\n- Le MPD (Modèle Physique de Données) : on traduit le MLD en un schéma concret pour un SGBD (par exemple MySQL), avec les types de colonnes, les index, etc.",
+            "question": "Quel modèle Merise décrit les entités et leurs associations sans se soucier du SGBD ?",
+            "options": [
+              "MLD",
+              "MPD",
+              "MCD",
+              "MVP"
+            ],
+            "correctAnswer": 2,
+            "testType": "mcq"
+          }
+        ]
+      },
+      {
+        "id": "part2",
+        "title": "Modèle Conceptuel de Données (MCD)",
+        "description": "Entités, associations et cardinalités.",
+        "order": 2,
+        "content": [
+          {
+            "type": "lesson",
+            "id": "merise-mcd-basics",
+            "title": "Entités, attributs et associations",
+            "content": "Dans un MCD, une entité représente un objet du réel (Client, Commande, Produit). Une entité possède des attributs (nom, email, date_commande…). Les associations représentent les liens entre entités (par exemple : un Client passe des Commandes). Les cardinalités (0,1,N) indiquent combien d'occurrences d'une entité peuvent être liées à une autre.",
+            "question": "Que représente une cardinalité (1,N) entre Client et Commande (Client -> Commande) ?",
+            "options": [
+              "Un client ne peut passer aucune commande",
+              "Un client peut passer plusieurs commandes",
+              "Une commande peut appartenir à plusieurs clients",
+              "Un client est obligé de partager sa commande"
+            ],
+            "correctAnswer": 1,
+            "testType": "mcq"
+          },
+          {
+            "type": "exercise",
+            "id": "merise-mcd-shop",
+            "title": "Construire un MCD simple",
+            "description": "Décrivez les entités et associations pour une petite boutique en ligne.",
+            "difficulty": "beginner",
+            "category": "merise",
+            "instructions": "Pour une boutique en ligne simple, identifiez les entités principales et les associations :\n\nContexte : un client peut passer plusieurs commandes. Chaque commande contient plusieurs produits. Un produit peut apparaître dans plusieurs commandes.\n\n1. Listez les entités.\n2. Décrivez les associations et leurs cardinalités (par exemple Client (1,N) Commande).",
+            "expectedOutput": "Entités : Client, Commande, Produit.\nAssociations :\n- Client (1,N) Commande\n- Commande (1,N) LigneCommande (N,1) Produit (si on introduit une entité associative)\nCardinalités expliquées.",
+            "testType": "text",
+            "hints": [
+              "Repérez les 'choses' principales : ce sont souvent les entités",
+              "Les relations 'un client passe des commandes' sont des associations"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "part3",
+        "title": "Du MCD au MLD",
+        "description": "Transformer un MCD en tables relationnelles.",
+        "order": 3,
+        "content": [
+          {
+            "type": "lesson",
+            "id": "merise-mcd-to-mld",
+            "title": "Règles de passage MCD → MLD",
+            "content": "Pour passer du MCD au MLD :\n- Chaque entité devient une table avec une clé primaire.\n- Les associations 1,N se traduisent par une clé étrangère dans la table du côté N.\n- Les associations N,N deviennent une table associative avec deux clés étrangères (souvent une table 'Ligne' comme ligne_commande).",
+            "question": "Comment traduit-on une relation N,N entre deux entités au niveau du MLD ?",
+            "options": [
+              "On fusionne les deux entités en une seule table",
+              "On ajoute une clé étrangère dans la première entité seulement",
+              "On crée une table associative avec deux clés étrangères",
+              "On supprime cette association"
+            ],
+            "correctAnswer": 2,
+            "testType": "mcq"
+          },
+          {
+            "type": "exercise",
+            "id": "merise-mld-shop",
+            "title": "Passer du MCD au MLD",
+            "description": "Proposez les tables à partir du MCD de la boutique.",
+            "difficulty": "intermediate",
+            "category": "merise",
+            "instructions": "À partir du MCD suivant :\n- Entités : Client, Commande, Produit\n- Associations :\n  - Un Client passe plusieurs Commandes (1,N)\n  - Une Commande contient plusieurs Produits et un Produit peut être dans plusieurs Commandes (N,N)\n\nProposez les tables du MLD (noms de tables, clés primaires, clés étrangères).",
+            "expectedOutput": "Tables possibles :\n- client(id_client, nom, email, ...)\n- commande(id_commande, date_commande, id_client)\n- produit(id_produit, libelle, prix, ...)\n- ligne_commande(id_commande, id_produit, quantite)\nAvec id_client comme clé étrangère dans commande, et id_commande + id_produit comme clés étrangères dans ligne_commande.",
+            "testType": "text",
+            "hints": [
+              "Chaque entité devient une table avec une clé primaire",
+              "Pour le N,N, pensez à une table intermédiaire"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "part4",
+        "title": "Du MLD au MPD (MySQL)",
+        "description": "Traduire le modèle logique en tables MySQL prêtes à l'emploi.",
+        "order": 4,
+        "content": [
+          {
+            "type": "lesson",
+            "id": "merise-mpd-sql",
+            "title": "Créer les tables en SQL",
+            "content": "Le MPD consiste à écrire le SQL concret à partir du MLD : choix des types (INT, VARCHAR, DATETIME...), clés primaires, clés étrangères, index. On obtient alors le script de création de la base pour un SGBD donné (par exemple MySQL).",
+            "question": "Quel élément appartient au MPD et pas au MCD ?",
+            "options": [
+              "Les entités",
+              "Les associations",
+              "Les types SQL (INT, VARCHAR, etc.)",
+              "Les cardinalités"
+            ],
+            "correctAnswer": 2,
+            "testType": "mcq"
+          },
+          {
+            "type": "exercise",
+            "id": "merise-mpd-sql-code",
+            "title": "Écrire le MPD en SQL",
+            "description": "Créez les tables MySQL pour le modèle boutique.",
+            "difficulty": "intermediate",
+            "category": "database",
+            "instructions": "À partir du MLD de la boutique (client, commande, produit, ligne_commande), écrivez le SQL de création des tables avec clés primaires et étrangères.",
+            "initialCode": "<?php\n$sql = \"\nCREATE TABLE client (\n  id_client INT AUTO_INCREMENT PRIMARY KEY,\n  nom VARCHAR(100) NOT NULL,\n  email VARCHAR(150) NOT NULL\n);\n\nCREATE TABLE commande (\n  id_commande INT AUTO_INCREMENT PRIMARY KEY,\n  date_commande DATETIME NOT NULL,\n  id_client INT NOT NULL,\n  FOREIGN KEY (id_client) REFERENCES client(id_client)\n);\n\nCREATE TABLE produit (\n  id_produit INT AUTO_INCREMENT PRIMARY KEY,\n  libelle VARCHAR(150) NOT NULL,\n  prix DECIMAL(10,2) NOT NULL\n);\n\nCREATE TABLE ligne_commande (\n  id_commande INT NOT NULL,\n  id_produit INT NOT NULL,\n  quantite INT NOT NULL,\n  PRIMARY KEY (id_commande, id_produit),\n  FOREIGN KEY (id_commande) REFERENCES commande(id_commande),\n  FOREIGN KEY (id_produit) REFERENCES produit(id_produit)\n);\n\";\n?>",
+            "expectedOutput": "Script SQL valide créant les 4 tables avec clés primaires et étrangères.",
+            "testType": "output",
+            "hints": [
+              "Pensez à PRIMARY KEY pour chaque table",
+              "Les FOREIGN KEY relient les tables entre elles",
+              "Une table associative peut avoir une clé primaire composée"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "quiz-merise",
+        "title": "Quiz : Maîtriser la méthode Merise",
+        "description": "Testez votre compréhension globale de Merise.",
+        "order": 5,
+        "content": [
+          {
+            "type": "lesson",
+            "id": "merise-quiz-1",
+            "title": "Quiz final Merise",
+            "content": "Répondez à cette question pour vérifier que vous avez bien compris la logique globale de la méthode.",
+            "question": "Dans quel ordre applique-t-on les modèles de données en Merise ?",
+            "options": [
+              "MPD → MLD → MCD",
+              "MCD → MPD → MLD",
+              "MLD → MCD → MPD",
+              "MCD → MLD → MPD"
+            ],
+            "correctAnswer": 3,
+            "testType": "mcq"
+          }
+        ]
+      }
+    ]
+  }
   ]
 }

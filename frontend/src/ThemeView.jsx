@@ -158,7 +158,7 @@ export default function ThemeView() {
             </div>
 
             {/* Liste des parties */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className={`flex-1 overflow-y-auto p-4 pb-32`}>
               <div className="grid gap-4">
                 {selectedTheme.parts
                   .sort((a, b) => a.order - b.order)

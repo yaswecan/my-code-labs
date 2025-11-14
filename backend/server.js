@@ -1199,6 +1199,30 @@ app.get(
       // Calculer les statistiques pour chaque élève
       const studentStats = await Promise.all(
         students.map(async (student) => {
+          // Calculer la progression par thème pour chaque élève
+          const themesWithProgress = await Promise.all(
+            (exerciseData.themes || []).map(async (theme) => {
+              const progress = await getThemeProgress(student.id, theme);
+              return {
+                id: theme.id,
+                title: theme.title,
+                progress,
+              };
+            })
+          );
+
+          // Calculer la progression globale comme moyenne des thèmes
+          const totalThemes = themesWithProgress.length;
+          const averageThemeProgress =
+            totalThemes > 0
+              ? Math.round(
+                  themesWithProgress.reduce(
+                    (sum, theme) => sum + theme.progress,
+                    0
+                  ) / totalThemes
+                )
+              : 0;
+
           const [exerciseProgress] = await pool.execute(
             "SELECT COUNT(*) as total, SUM(completed) as completed FROM progress WHERE user_id = ?",
             [student.id]
@@ -1209,12 +1233,6 @@ app.get(
             [student.id]
           );
 
-          const totalItems =
-            exerciseProgress[0].total + lessonProgress[0].total;
-          const completedItems =
-            (exerciseProgress[0].completed || 0) +
-            (lessonProgress[0].completed || 0);
-
           return {
             id: student.id,
             username: student.username,
@@ -1222,12 +1240,7 @@ app.get(
             completedExercises: exerciseProgress[0].completed || 0,
             totalLessons: lessonProgress[0].total,
             completedLessons: lessonProgress[0].completed || 0,
-            progress: Math.min(
-              100,
-              totalItems > 0
-                ? Math.round((completedItems / totalItems) * 100)
-                : 0
-            ),
+            progress: averageThemeProgress,
           };
         })
       );
