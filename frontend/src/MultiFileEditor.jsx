@@ -195,6 +195,48 @@ console.log('Script loaded successfully!');`,
       iframeDoc.open();
       iframeDoc.write(output);
       iframeDoc.close();
+
+      // Écouter les messages postMessage depuis l'iframe
+      const handleMessage = async (event) => {
+        if (event.data.type === 'FORM_SUBMIT') {
+          console.log('Form submitted from iframe:', event.data.formData);
+
+          // Ré-exécuter le projet avec les données du formulaire
+          try {
+            setIsExecuting(true);
+            const res = await fetch("/api/run-project", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                files: files.map(f => ({
+                  name: f.name,
+                  content: f.content
+                })),
+                entryPoint: "index.php",
+                formData: event.data.formData,
+                method: event.data.method || 'POST'
+              }),
+            });
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+            const data = await res.json();
+            setOutput(data.output || data.error);
+            setIsHtml(data.isHtml || false);
+          } catch (error) {
+            setOutput("Erreur: " + error.message);
+            setIsHtml(false);
+          } finally {
+            setIsExecuting(false);
+          }
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      return () => {
+        window.removeEventListener('message', handleMessage);
+      };
     }
   }, [output, isHtml, viewMode]);
 
@@ -300,7 +342,7 @@ console.log('Script loaded successfully!');`,
                 ref={iframeRef}
                 className="w-full border rounded bg-white"
                 style={{ height: "calc(40vh - 60px)" }}
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts allow-same-origin allow-forms"
                 title="PHP Output"
               />
             ) : (

@@ -51,6 +51,39 @@ echo '<!DOCTYPE html>
       iframeDoc.open();
       iframeDoc.write(output);
       iframeDoc.close();
+
+      // Écouter les messages postMessage depuis l'iframe
+      const handleMessage = async (event) => {
+        if (event.data.type === 'FORM_SUBMIT') {
+          console.log('Form submitted from iframe:', event.data.formData);
+
+          // Ré-exécuter le code PHP avec les données du formulaire
+          try {
+            const res = await fetch("http://localhost:4000/api/run-php", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                code,
+                formData: event.data.formData,
+                method: event.data.method || 'POST'
+              }),
+            });
+            const data = await res.json();
+            setOutput(data.output || data.error);
+            setIsHtml(data.isHtml || false);
+          } catch (error) {
+            console.error('Error re-executing with form data:', error);
+            setOutput('Erreur lors de la ré-exécution: ' + error.message);
+            setIsHtml(false);
+          }
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      return () => {
+        window.removeEventListener('message', handleMessage);
+      };
     }
   }, [output, isHtml, viewMode]);
 
@@ -85,7 +118,7 @@ echo '<!DOCTYPE html>
               ref={iframeRef}
               className="w-full border rounded bg-white"
               style={{ minHeight: "400px", height: "auto" }}
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts allow-same-origin allow-forms"
               title="PHP Output"
             />
           ) : (

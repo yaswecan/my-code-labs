@@ -107,7 +107,7 @@ initDB().catch(console.error);
 checkDockerConnectivity();
 
 app.post("/api/run-php", async (req, res) => {
-  const { code } = req.body;
+  const { code, formData, method } = req.body;
 
   if (!code) {
     return res.json({ error: "No code provided" });
@@ -127,8 +127,43 @@ app.post("/api/run-php", async (req, res) => {
       });
     }
 
+    // Préparer le code PHP avec les données du formulaire
+    let finalCode = code;
+
+    // Détecter si le code contient des formulaires POST
+    const hasPostForm =
+      code.includes('method="post"') ||
+      code.includes("method='post'") ||
+      code.includes("$_POST");
+    const requestMethod = method || (hasPostForm ? "POST" : "GET");
+
+    // Extraire les noms des champs input du formulaire HTML
+    const inputRegex = /<input[^>]*name=["']([^"']+)["'][^>]*>/gi;
+    const postFields = [];
+    let match;
+    while ((match = inputRegex.exec(code)) !== null) {
+      postFields.push(match[1]);
+    }
+
+    // Générer le code PHP pour $_POST
+    let postDataCode = "";
+    if (formData && Object.keys(formData).length > 0) {
+      // Utiliser uniquement les données du formulaire soumis
+      postDataCode = Object.entries(formData)
+        .map(([key, value]) => {
+          const escapedValue = String(value).replace(/'/g, "\\'");
+          return `    $_POST['${key}'] = '${escapedValue}';`;
+        })
+        .join("\n");
+    }
+
+    // Ajouter le code $_POST au début du code PHP
+    if (postDataCode) {
+      finalCode = `<?php\n${postDataCode}\n?>\n${code}`;
+    }
+
     // Écrire le code PHP dans le fichier temporaire
-    fs.writeFileSync(filePath, code);
+    fs.writeFileSync(filePath, finalCode);
     console.log(`✅ PHP file created: ${filePath}`);
 
     // Exécuter le fichier PHP dans le conteneur php-sandbox
@@ -287,7 +322,7 @@ app.post("/api/run-php", async (req, res) => {
 
 // Nouvel endpoint pour exécuter un projet multi-fichiers
 app.post("/api/run-project", async (req, res) => {
-  const { files, entryPoint } = req.body;
+  const { files, entryPoint, formData, method } = req.body;
 
   console.log({ files });
 
@@ -319,8 +354,45 @@ app.post("/api/run-project", async (req, res) => {
 
     // Écrire tous les fichiers
     for (const file of files) {
+      let fileContent = file.content;
+
+      // Si c'est le fichier d'entrée, ajouter les données du formulaire
+      if (file.name === entryPoint) {
+        // Détecter si le code contient des formulaires POST
+        const hasPostForm =
+          file.content.includes('method="post"') ||
+          file.content.includes("method='post'") ||
+          file.content.includes("$_POST");
+        const requestMethod = method || (hasPostForm ? "POST" : "GET");
+
+        // Extraire les noms des champs input du formulaire HTML
+        const inputRegex = /<input[^>]*name=["']([^"']+)["'][^>]*>/gi;
+        const postFields = [];
+        let match;
+        while ((match = inputRegex.exec(file.content)) !== null) {
+          postFields.push(match[1]);
+        }
+
+        // Générer le code PHP pour $_POST
+        let postDataCode = "";
+        if (formData && Object.keys(formData).length > 0) {
+          // Utiliser uniquement les données du formulaire soumis
+          postDataCode = Object.entries(formData)
+            .map(([key, value]) => {
+              const escapedValue = String(value).replace(/'/g, "\\'");
+              return `    $_POST['${key}'] = '${escapedValue}';`;
+            })
+            .join("\n");
+        }
+
+        // Ajouter le code $_POST au début du code PHP
+        if (postDataCode) {
+          fileContent = `<?php\n${postDataCode}\n?>\n${file.content}`;
+        }
+      }
+
       const filePath = path.join(projectPath, file.name);
-      fs.writeFileSync(filePath, file.content);
+      fs.writeFileSync(filePath, fileContent);
       console.log(`✅ File created: ${file.name}`);
     }
 
@@ -502,6 +574,56 @@ app.post("/api/run-project", async (req, res) => {
               return match;
             }
           );
+        }
+
+        // Injecter JavaScript pour intercepter les soumissions de formulaires
+        if (isHtml) {
+          const formInterceptorScript = `
+<script>
+(function() {
+  // Intercepter toutes les soumissions de formulaires
+  document.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var form = e.target;
+    var formData = new FormData(form);
+    var data = {};
+
+    // Convertir FormData en objet simple
+    for (var pair of formData.entries()) {
+      data[pair[0]] = pair[1];
+    }
+
+    // Envoyer les données au parent (React app)
+    window.parent.postMessage({
+      type: 'FORM_SUBMIT',
+      formData: data,
+      action: form.action || window.location.href,
+      method: form.method || 'GET'
+    }, '*');
+
+    return false;
+  });
+})();
+</script>
+`;
+
+          // Injecter le script avant la fermeture du body
+          finalOutput = finalOutput.replace(
+            /<\/body>/i,
+            formInterceptorScript + "</body>"
+          );
+
+          // Si pas de body, l'ajouter avant </html>
+          if (
+            !finalOutput.includes("</body>") &&
+            finalOutput.includes("</html>")
+          ) {
+            finalOutput = finalOutput.replace(
+              /<\/html>/i,
+              formInterceptorScript + "</html>"
+            );
+          }
         }
 
         res.json({
