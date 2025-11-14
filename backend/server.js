@@ -322,7 +322,7 @@ app.post("/api/run-php", async (req, res) => {
 
 // Nouvel endpoint pour exécuter un projet multi-fichiers
 app.post("/api/run-project", async (req, res) => {
-  const { files, entryPoint, formData, method } = req.body;
+  const { files, entryPoint, formData, method, queryParams } = req.body;
 
   console.log({ files });
 
@@ -373,7 +373,7 @@ app.post("/api/run-project", async (req, res) => {
           postFields.push(match[1]);
         }
 
-        // Générer le code PHP pour $_POST
+        // Générer le code PHP pour $_POST et $_GET
         let postDataCode = "";
         if (formData && Object.keys(formData).length > 0) {
           // Utiliser uniquement les données du formulaire soumis
@@ -385,9 +385,24 @@ app.post("/api/run-project", async (req, res) => {
             .join("\n");
         }
 
-        // Ajouter le code $_POST au début du code PHP
-        if (postDataCode) {
-          fileContent = `<?php\n${postDataCode}\n?>\n${file.content}`;
+        let getDataCode = "";
+        if (queryParams && Object.keys(queryParams).length > 0) {
+          // Générer $_GET à partir des paramètres de requête
+          getDataCode = Object.entries(queryParams)
+            .map(([key, value]) => {
+              const escapedValue = String(value).replace(/'/g, "\\'");
+              return `    $_GET['${key}'] = '${escapedValue}';`;
+            })
+            .join("\n");
+        }
+
+        // Ajouter le code $_POST et $_GET au début du code PHP
+        let injectedCode = "";
+        if (postDataCode) injectedCode += postDataCode + "\n";
+        if (getDataCode) injectedCode += getDataCode + "\n";
+
+        if (injectedCode) {
+          fileContent = `<?php\n${injectedCode}?>\n${file.content}`;
         }
       }
 
@@ -576,9 +591,9 @@ app.post("/api/run-project", async (req, res) => {
           );
         }
 
-        // Injecter JavaScript pour intercepter les soumissions de formulaires
+        // Injecter JavaScript pour intercepter les soumissions de formulaires et les clics de liens
         if (isHtml) {
-          const formInterceptorScript = `
+          const interceptorScript = `
 <script>
 (function() {
   // Intercepter toutes les soumissions de formulaires
@@ -604,6 +619,22 @@ app.post("/api/run-project", async (req, res) => {
 
     return false;
   });
+
+  // Intercepter les clics sur les liens
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest('a');
+    if (link && link.href) {
+      e.preventDefault();
+
+      // Envoyer l'URL au parent pour navigation
+      window.parent.postMessage({
+        type: 'LINK_CLICK',
+        url: link.href
+      }, '*');
+
+      return false;
+    }
+  });
 })();
 </script>
 `;
@@ -611,7 +642,7 @@ app.post("/api/run-project", async (req, res) => {
           // Injecter le script avant la fermeture du body
           finalOutput = finalOutput.replace(
             /<\/body>/i,
-            formInterceptorScript + "</body>"
+            interceptorScript + "</body>"
           );
 
           // Si pas de body, l'ajouter avant </html>
@@ -621,7 +652,7 @@ app.post("/api/run-project", async (req, res) => {
           ) {
             finalOutput = finalOutput.replace(
               /<\/html>/i,
-              formInterceptorScript + "</html>"
+              interceptorScript + "</html>"
             );
           }
         }

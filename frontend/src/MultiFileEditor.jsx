@@ -88,6 +88,7 @@ console.log('Script loaded successfully!');`,
   const [isExecuting, setIsExecuting] = useState(false);
   const iframeRef = useRef(null);
   const [nextId, setNextId] = useState(4);
+  const [currentUrl, setCurrentUrl] = useState("http://localhost:5173/project");
 
   // Obtenir le fichier actif
   const activeFile = files.find(f => f.id === activeFileId);
@@ -163,6 +164,13 @@ console.log('Script loaded successfully!');`,
   const runProject = async () => {
     setIsExecuting(true);
     try {
+      // Parser les paramètres de requête de l'URL
+      const urlObj = new URL(currentUrl);
+      const queryParams = {};
+      for (let [key, value] of urlObj.searchParams) {
+        queryParams[key] = value;
+      }
+
       const res = await fetch("/api/run-project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -171,7 +179,8 @@ console.log('Script loaded successfully!');`,
             name: f.name,
             content: f.content
           })),
-          entryPoint: "index.php"
+          entryPoint: "index.php",
+          queryParams
         }),
       });
       if (!res.ok) {
@@ -204,6 +213,13 @@ console.log('Script loaded successfully!');`,
           // Ré-exécuter le projet avec les données du formulaire
           try {
             setIsExecuting(true);
+            // Parser les paramètres de requête de l'URL actuelle
+            const urlObj = new URL(currentUrl);
+            const queryParams = {};
+            for (let [key, value] of urlObj.searchParams) {
+              queryParams[key] = value;
+            }
+
             const res = await fetch("/api/run-project", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -214,7 +230,60 @@ console.log('Script loaded successfully!');`,
                 })),
                 entryPoint: "index.php",
                 formData: event.data.formData,
-                method: event.data.method || 'POST'
+                method: event.data.method || 'POST',
+                queryParams
+              }),
+            });
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+            const data = await res.json();
+            setOutput(data.output || data.error);
+            setIsHtml(data.isHtml || false);
+          } catch (error) {
+            setOutput("Erreur: " + error.message);
+            setIsHtml(false);
+          } finally {
+            setIsExecuting(false);
+          }
+        } else if (event.data.type === 'LINK_CLICK') {
+          console.log('Link clicked from iframe:', event.data.url);
+
+          // Mettre à jour l'URL et ré-exécuter avec le nouveau point d'entrée
+          try {
+            setCurrentUrl(event.data.url);
+            setIsExecuting(true);
+
+            // Extraire le nom du fichier de l'URL
+            const urlObj = new URL(event.data.url);
+            const pathParts = urlObj.pathname.split('/');
+            const fileName = pathParts[pathParts.length - 1] || 'index.php';
+
+            // Vérifier si le fichier existe
+            const targetFile = files.find(f => f.name === fileName);
+            if (!targetFile) {
+              setOutput(`Erreur: Fichier ${fileName} non trouvé dans le projet.`);
+              setIsHtml(false);
+              setIsExecuting(false);
+              return;
+            }
+
+            // Parser les paramètres de requête de la nouvelle URL
+            const queryParams = {};
+            for (let [key, value] of urlObj.searchParams) {
+              queryParams[key] = value;
+            }
+
+            const res = await fetch("/api/run-project", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                files: files.map(f => ({
+                  name: f.name,
+                  content: f.content
+                })),
+                entryPoint: fileName,
+                queryParams
               }),
             });
             if (!res.ok) {
@@ -317,7 +386,7 @@ console.log('Script loaded successfully!');`,
         >
           {isExecuting ? "⏳ Exécution..." : "▶ Exécuter le Projet"}
         </button>
-        
+
         {isHtml && (
           <button
             onClick={() => setViewMode(viewMode === "rendered" ? "source" : "rendered")}
@@ -326,6 +395,17 @@ console.log('Script loaded successfully!');`,
             {viewMode === "rendered" ? "📄 Code Source" : "🎨 Rendu"}
           </button>
         )}
+
+        <div className="flex items-center gap-2 ml-4">
+          <label className="text-sm text-gray-600">URL:</label>
+          <input
+            type="text"
+            value={currentUrl}
+            onChange={(e) => setCurrentUrl(e.target.value)}
+            className="px-2 py-1 border rounded text-sm flex-1 min-w-0"
+            placeholder="http://localhost:5173/project"
+          />
+        </div>
 
         <div className="ml-auto text-sm text-gray-600">
           {files.length} fichier{files.length > 1 ? "s" : ""} • Fichier actif: {activeFile?.name}
