@@ -34,6 +34,7 @@ const TeacherDashboard = () => {
   const [overview, setOverview] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentProgress, setStudentProgress] = useState(null);
+  const [studentBadges, setStudentBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -82,17 +83,37 @@ const TeacherDashboard = () => {
   const loadStudentProgress = async (studentId) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/teacher/student/${studentId}/progress`, {
+
+      // Charger la progression
+      const progressResponse = await fetch(`/api/teacher/student/${studentId}/progress`, {
         headers: getAuthHeaders(),
       });
 
-      if (!response.ok) {
+      if (!progressResponse.ok) {
         throw new Error('Erreur lors du chargement de la progression');
       }
 
-      const data = await response.json();
-      setStudentProgress(data);
-      setSelectedStudent(data.student);
+      const progressData = await progressResponse.json();
+      setStudentProgress(progressData);
+      setSelectedStudent(progressData.student);
+
+      // Charger les badges de l'élève
+      try {
+        const badgesResponse = await fetch(`/api/user/${studentId}/badges`, {
+          headers: getAuthHeaders(),
+        });
+
+        if (badgesResponse.ok) {
+          const badgesData = await badgesResponse.json();
+          setStudentBadges(badgesData);
+        } else {
+          setStudentBadges([]);
+        }
+      } catch (badgeErr) {
+        console.error('Erreur chargement badges:', badgeErr);
+        setStudentBadges([]);
+      }
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -223,6 +244,7 @@ const TeacherDashboard = () => {
                 onClick={() => {
                   setSelectedStudent(null);
                   setStudentProgress(null);
+                  setStudentBadges([]);
                 }}
                 className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
               >
@@ -236,7 +258,7 @@ const TeacherDashboard = () => {
                 <div className="text-2xl font-bold text-blue-600">
                   {studentProgress.statistics.totalExercises}
                 </div>
-                <div className="text-sm text-gray-600">Exercices totaux</div>
+                <div className="text-sm text-gray-600">Exercices commencés</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded">
                 <div className="text-2xl font-bold text-green-600">
@@ -248,7 +270,7 @@ const TeacherDashboard = () => {
                 <div className="text-2xl font-bold text-purple-600">
                   {studentProgress.statistics.totalLessons}
                 </div>
-                <div className="text-sm text-gray-600">Leçons totales</div>
+                <div className="text-sm text-gray-600">Leçons commencées</div>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded">
                 <div className="text-2xl font-bold text-orange-600">
@@ -267,6 +289,39 @@ const TeacherDashboard = () => {
                 </span>
               </div>
               <ProgressBar progress={studentProgress.statistics.overallProgress} />
+            </div>
+
+            {/* Badges de l'élève */}
+            <div className="mb-6">
+              <h3 className="font-semibold mb-4">🏆 Badges obtenus ({studentBadges.length})</h3>
+              {studentBadges.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {studentBadges.map((badge) => (
+                    <div
+                      key={badge.id}
+                      className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg p-4"
+                    >
+                      <div className="text-center">
+                        <div className="text-3xl mb-2">{badge.icon}</div>
+                        <h4 className="font-semibold text-gray-800 text-sm mb-1">
+                          {badge.name}
+                        </h4>
+                        <p className="text-gray-600 text-xs mb-2">
+                          {badge.description}
+                        </p>
+                        <div className="text-xs text-gray-500">
+                          Obtenu le {new Date(badge.earned_at).toLocaleDateString('fr-FR')}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="text-4xl mb-2">🏆</div>
+                  <p>Aucun badge obtenu pour le moment</p>
+                </div>
+              )}
             </div>
 
             {/* Progression par thème */}

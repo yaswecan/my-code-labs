@@ -2,11 +2,38 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext.jsx";
 import LearningMode from "./LearningMode.jsx";
 
+// Notification de badge gagné
+function BadgeNotification({ badge, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-bounce">
+      <div className="flex items-center space-x-3">
+        <div className="text-2xl">{badge.icon}</div>
+        <div>
+          <h3 className="font-bold">🏆 Nouveau badge obtenu !</h3>
+          <p className="text-sm">{badge.name}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-white hover:text-gray-200 text-xl"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ThemeView() {
   const [themes, setThemes] = useState([]);
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [selectedPart, setSelectedPart] = useState(null);
   const [showExerciseMode, setShowExerciseMode] = useState(false);
+  const [badgeNotification, setBadgeNotification] = useState(null);
   const { getAuthHeaders } = useAuth();
 
   // Fonction pour recharger les thèmes avec progression
@@ -16,7 +43,35 @@ export default function ThemeView() {
         headers: getAuthHeaders()
       });
       const data = await res.json();
+
+      // Vérifier si de nouveaux badges ont été obtenus
+      const previousProgress = themes.reduce((acc, theme) => {
+        acc[theme.id] = theme.progress || 0;
+        return acc;
+      }, {});
+
       setThemes(data);
+
+      // Vérifier les nouveaux badges (thèmes passés de <100% à 100%)
+      for (const theme of data) {
+        const prevProgress = previousProgress[theme.id] || 0;
+        if (prevProgress < 100 && theme.progress === 100) {
+          // Récupérer les badges pour voir si c'est un nouveau
+          try {
+            const badgesRes = await fetch("/api/user/badges", {
+              headers: getAuthHeaders()
+            });
+            const badges = await badgesRes.json();
+            const themeBadge = badges.find(b => b.theme_id === theme.id);
+
+            if (themeBadge) {
+              setBadgeNotification(themeBadge);
+            }
+          } catch (badgeErr) {
+            console.error("Erreur récupération badges:", badgeErr);
+          }
+        }
+      }
 
       // Si un thème est sélectionné, le mettre à jour aussi
       if (selectedTheme) {
@@ -62,6 +117,13 @@ export default function ThemeView() {
         })
       );
       setSelectedTheme({ ...theme, parts: partsWithProgress });
+
+      // Vérifier si le thème est maintenant complet (toutes les parties à 100%)
+      const allPartsComplete = partsWithProgress.every(part => part.progress === 100);
+      if (allPartsComplete) {
+        // Recharger les thèmes pour mettre à jour les badges potentiellement gagnés
+        setTimeout(() => reloadThemes(), 1000);
+      }
     }
   };
 
@@ -102,6 +164,14 @@ export default function ThemeView() {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      {/* Notification de badge */}
+      {badgeNotification && (
+        <BadgeNotification
+          badge={badgeNotification}
+          onClose={() => setBadgeNotification(null)}
+        />
+      )}
+
       {/* Sidebar avec la liste des thèmes */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">

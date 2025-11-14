@@ -691,6 +691,112 @@ app.post("/api/run-project", async (req, res) => {
   }
 });
 
+// Endpoint pour récupérer les badges d'un utilisateur
+app.get("/api/user/badges", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const { getUserBadges } = await import("./auth.js");
+    const badges = await getUserBadges(userId);
+    res.json(badges);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des badges:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour simuler l'attribution de tous les badges (pour démo)
+app.post("/api/user/badges/simulate", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const { pool } = await import("./db.js");
+
+    // Récupérer tous les badges disponibles
+    const [badges] = await pool.execute("SELECT id, badge_key FROM badges");
+
+    // Attribuer tous les badges à l'utilisateur
+    for (const badge of badges) {
+      await pool.execute(
+        "INSERT IGNORE INTO user_badges (user_id, badge_id) VALUES (?, ?)",
+        [userId, badge.id]
+      );
+    }
+
+    // Récupérer les badges attribués
+    const { getUserBadges } = await import("./auth.js");
+    const userBadges = await getUserBadges(userId);
+
+    res.json({
+      message: "Tous les badges ont été attribués avec succès",
+      badges: userBadges,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la simulation des badges:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour récupérer les badges d'un élève (pour les enseignants)
+app.get(
+  "/api/user/:userId/badges",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    const targetUserId = req.params.userId;
+
+    try {
+      const { getUserBadges } = await import("./auth.js");
+      const badges = await getUserBadges(targetUserId);
+      res.json(badges);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des badges:", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// Endpoint pour mettre à jour le nom d'un badge (pour les enseignants)
+app.put(
+  "/api/badges/:badgeId",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    const { badgeId } = req.params;
+    const { name, description, icon } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: "Le nom du badge est requis" });
+    }
+
+    try {
+      await pool.execute(
+        "UPDATE badges SET name = ?, description = ?, icon = ?, updated_at = NOW() WHERE id = ?",
+        [name, description || null, icon || "🏆", badgeId]
+      );
+
+      res.json({ message: "Badge mis à jour avec succès" });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du badge:", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// Endpoint pour récupérer tous les badges (pour les enseignants)
+app.get("/api/badges", authenticateToken, requireTeacher, async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      "SELECT id, badge_key, name, description, icon, theme_id, created_at, updated_at FROM badges ORDER BY created_at DESC"
+    );
+
+    res.json(rows);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des badges:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 // Routes d'authentification
 app.post("/api/auth/register", async (req, res) => {
   const { username, email, password } = req.body;

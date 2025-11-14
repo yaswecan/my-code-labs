@@ -82,6 +82,55 @@ async function initDB() {
       )
     `);
 
+    // Créer la table badges
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS badges (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        badge_key VARCHAR(100) UNIQUE NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        icon VARCHAR(50) DEFAULT '🏆',
+        theme_id VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Créer la table user_badges
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS user_badges (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        badge_id INT NOT NULL,
+        earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_user_badge (user_id, badge_id)
+      )
+    `);
+
+    // Insérer les badges par défaut pour chaque thème
+    const exerciseData = JSON.parse(
+      await fs.readFileSync("./exercises.json", "utf8")
+    );
+    if (exerciseData.themes) {
+      for (const theme of exerciseData.themes) {
+        await connection.execute(
+          `
+          INSERT IGNORE INTO badges (badge_key, name, description, icon, theme_id)
+          VALUES (?, ?, ?, ?, ?)
+        `,
+          [
+            `theme_${theme.id}`,
+            `Maître ${theme.title}`,
+            `A complété entièrement le thème "${theme.title}"`,
+            "🏆",
+            theme.id,
+          ]
+        );
+      }
+    }
+
     connection.release();
     console.log("✅ Base de données initialisée avec succès");
   } catch (error) {

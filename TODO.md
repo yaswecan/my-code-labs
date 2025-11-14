@@ -1,25 +1,27 @@
-# TODO: Implement Teacher Dashboard
+# TODO - Système de Badges
 
-## Backend Changes
+## Backend
 
-- [x] Add role field to users table (student/teacher)
-- [x] Update authentication system to include roles
-- [x] Create API endpoints for teacher data:
-  - [x] GET /api/teacher/students - List all students
-  - [x] GET /api/teacher/student/:id/progress - Get detailed progress for a student
-  - [x] GET /api/teacher/overview - Get class overview stats
+- [x] Ajouter tables `badges` et `user_badges` dans db.js
+- [x] Créer badges par défaut pour chaque thème dans initDB
+- [x] Ajouter fonctions de gestion des badges dans auth.js
+- [x] Modifier updateExerciseProgress et updateLessonProgress pour vérifier attribution badges
+- [x] Ajouter endpoints API pour récupérer les badges utilisateur
 
-## Frontend Changes
+## Frontend
 
-- [x] Update AuthContext to handle user roles
-- [x] Create TeacherDashboard.jsx component
-- [x] Create StudentResults.jsx component for individual student details
-- [x] Add teacher dashboard mode to App.jsx navigation
-- [x] Add role-based navigation (show teacher dashboard only for teachers)
+- [x] Créer composant BadgesView.jsx pour afficher les badges
+- [x] Ajouter navigation vers "Mes Badges" dans App.jsx
+- [x] Intégrer affichage badges dans ThemeView.jsx (notification quand badge gagné)
 
-## Testing
+## Tests
 
-- [ ] Test role-based access control
-- [ ] Test teacher dashboard functionality
-- [ ] Test data security (teachers can't access other teacher data)
-- [ ] Create a teacher account for testing
+- [x] Tester attribution automatique des badges
+- [x] Vérifier affichage des badges dans l'interface
+- [x] Tester avec plusieurs utilisateurs
+
+## Améliorations futures
+
+- [x] Interface admin pour gérer les badges
+- [x] Badges pour autres achievements (premier exercice, streak, etc.)
+- [x] Notifications en temps réel

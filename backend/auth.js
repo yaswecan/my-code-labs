@@ -104,7 +104,7 @@ export async function createUser(username, email, password, role = "student") {
       // On continue même si la création de la DB échoue
     }
 
-    return { id: userId, username, email };
+    return { id: userId, username, email, role };
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
       throw new Error("Nom d'utilisateur ou email déjà utilisé");
@@ -158,6 +158,14 @@ export async function updateExerciseProgress(
        updated_at = NOW()`,
       [userId, exerciseId, completed, score]
     );
+
+    // Vérifier et attribuer le badge de thème si nécessaire
+    if (completed) {
+      const themeId = await getThemeIdFromExercise(exerciseId);
+      if (themeId) {
+        await checkAndAwardThemeBadges(userId, themeId);
+      }
+    }
   } catch (error) {
     console.error("Erreur lors de la mise à jour de la progression:", error);
     throw error;
@@ -183,6 +191,14 @@ export async function updateLessonProgress(
        updated_at = NOW()`,
       [userId, lessonId, completed, score]
     );
+
+    // Vérifier et attribuer le badge de thème si nécessaire
+    if (completed) {
+      const themeId = await getThemeIdFromLesson(lessonId);
+      if (themeId) {
+        await checkAndAwardThemeBadges(userId, themeId);
+      }
+    }
   } catch (error) {
     console.error(
       "Erreur lors de la mise à jour de la progression de la leçon:",
@@ -272,6 +288,118 @@ export async function getPartProgress(userId, part) {
   }
 }
 
+// Fonction pour vérifier et attribuer les badges de thème
+export async function checkAndAwardThemeBadges(userId, themeId) {
+  try {
+    // Vérifier si l'utilisateur a déjà ce badge
+    const [existingBadge] = await pool.execute(
+      `SELECT ub.id FROM user_badges ub
+       JOIN badges b ON ub.badge_id = b.id
+       WHERE ub.user_id = ? AND b.badge_key = ?`,
+      [userId, `theme_${themeId}`]
+    );
+
+    if (existingBadge.length > 0) {
+      return false; // Badge déjà obtenu
+    }
+
+    // Calculer la progression du thème
+    const fs = await import("fs");
+    const exerciseData = JSON.parse(
+      fs.readFileSync("./exercises.json", "utf8")
+    );
+    const theme = exerciseData.themes?.find((t) => t.id === themeId);
+
+    if (!theme) {
+      return false;
+    }
+
+    const progress = await getThemeProgress(userId, theme);
+
+    // Si progression = 100%, attribuer le badge
+    if (progress === 100) {
+      // Récupérer l'ID du badge
+      const [badgeResult] = await pool.execute(
+        "SELECT id FROM badges WHERE badge_key = ?",
+        [`theme_${themeId}`]
+      );
+
+      if (badgeResult.length > 0) {
+        const badgeId = badgeResult[0].id;
+
+        // Attribuer le badge
+        await pool.execute(
+          "INSERT INTO user_badges (user_id, badge_id) VALUES (?, ?)",
+          [userId, badgeId]
+        );
+
+        console.log(
+          `🏆 Badge "${theme.title}" attribué à l'utilisateur ${userId}`
+        );
+        return true;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Erreur lors de l'attribution du badge:", error);
+    return false;
+  }
+}
+
+// Fonction pour récupérer les badges d'un utilisateur
+export async function getUserBadges(userId) {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT b.id, b.badge_key, b.name, b.description, b.icon, b.theme_id, ub.earned_at
+       FROM user_badges ub
+       JOIN badges b ON ub.badge_id = b.id
+       WHERE ub.user_id = ?
+       ORDER BY ub.earned_at DESC`,
+      [userId]
+    );
+
+    return rows;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des badges:", error);
+    throw error;
+  }
+}
+
+// Fonction pour obtenir l'ID du thème à partir d'un exerciseId
+export async function getThemeIdFromExercise(exerciseId) {
+  const fs = await import("fs");
+  const exerciseData = JSON.parse(fs.readFileSync("./exercises.json", "utf8"));
+
+  for (const theme of exerciseData.themes || []) {
+    for (const part of theme.parts || []) {
+      for (const item of part.content || []) {
+        if (item.type === "exercise" && item.id === exerciseId) {
+          return theme.id;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// Fonction pour obtenir l'ID du thème à partir d'un lessonId
+export async function getThemeIdFromLesson(lessonId) {
+  const fs = await import("fs");
+  const exerciseData = JSON.parse(fs.readFileSync("./exercises.json", "utf8"));
+
+  for (const theme of exerciseData.themes || []) {
+    for (const part of theme.parts || []) {
+      for (const item of part.content || []) {
+        if (item.type === "lesson" && item.id === lessonId) {
+          return theme.id;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 // Fonction pour calculer la progression d'un thème
 export async function getThemeProgress(userId, theme) {
   try {
@@ -311,7 +439,10 @@ export async function getThemeProgress(userId, theme) {
       }
     }
 
-    return totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0;
+    const progress =
+      totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0;
+
+    return progress;
   } catch (error) {
     console.error("Erreur lors du calcul de la progression du thème:", error);
     return 0;
