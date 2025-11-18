@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext.jsx';
 import LessonExerciseEditor from './LessonExerciseEditor.jsx';
+import BadgesView from './BadgesView.jsx';
 
 // Mapping des exercices et leçons vers leurs thèmes
 const exerciseToTheme = {
@@ -183,6 +184,16 @@ const TeacherDashboard = () => {
               }`}
             >
               ✏️ Gestion du Contenu
+            </button>
+            <button
+              onClick={() => setActiveTab('badges')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'badges'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              🏆 Gestion des Badges
             </button>
           </nav>
         </div>
@@ -481,6 +492,10 @@ const TeacherDashboard = () => {
 
         {activeTab === 'content' && (
           <LessonExerciseEditor />
+        )}
+
+        {activeTab === 'badges' && (
+          <BadgesView />
         )}
       </div>
     </div>

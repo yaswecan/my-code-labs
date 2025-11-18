@@ -56,6 +56,28 @@ export default function BadgesView() {
     setEditForm({ name: '', description: '', icon: '' });
   };
 
+  const createBadge = async () => {
+    try {
+      const res = await fetch("/api/badges", {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editForm)
+      });
+
+      if (res.ok) {
+        await fetchAllBadges();
+        cancelEditing();
+      } else {
+        console.error("Erreur lors de la création du badge");
+      }
+    } catch (err) {
+      console.error("Erreur création badge:", err);
+    }
+  };
+
   const saveBadge = async () => {
     try {
       const res = await fetch(`/api/badges/${editingBadge}`, {
@@ -109,7 +131,72 @@ export default function BadgesView() {
           // Vue enseignant
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Tous les Badges</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-800">Tous les Badges</h2>
+                <button
+                  onClick={() => setEditingBadge('new')}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  ➕ Ajouter un Badge
+                </button>
+              </div>
+              {/* Formulaire d'ajout de nouveau badge */}
+              {editingBadge === 'new' && (
+                <div className="mb-6 bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">➕ Nouveau Badge</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Icône
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.icon}
+                        onChange={(e) => setEditForm({...editForm, icon: e.target.value})}
+                        className="w-full p-2 border rounded"
+                        placeholder="🏆"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nom
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                        className="w-full p-2 border rounded"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description
+                      </label>
+                      <textarea
+                        value={editForm.description}
+                        onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                        className="w-full p-2 border rounded"
+                        rows="3"
+                      />
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={createBadge}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                      >
+                        Créer
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {allBadges.map((badge) => (
                   <div
@@ -176,12 +263,20 @@ export default function BadgesView() {
                         <p className="text-gray-600 text-sm mb-3">
                           {badge.description}
                         </p>
-                        <button
-                          onClick={() => startEditing(badge)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                        >
-                          Modifier
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => startEditing(badge)}
+                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => deleteBadge(badge.id)}
+                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

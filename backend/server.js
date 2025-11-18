@@ -858,6 +858,34 @@ app.get("/api/badges", authenticateToken, requireTeacher, async (req, res) => {
   }
 });
 
+// Endpoint pour créer un nouveau badge (pour les enseignants)
+app.post("/api/badges", authenticateToken, requireTeacher, async (req, res) => {
+  const { name, description, icon } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ error: "Le nom du badge est requis" });
+  }
+
+  try {
+    const badgeKey = `custom_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+
+    const [result] = await pool.execute(
+      "INSERT INTO badges (badge_key, name, description, icon) VALUES (?, ?, ?, ?)",
+      [badgeKey, name, description || null, icon || "🏆"]
+    );
+
+    res.status(201).json({
+      message: "Badge créé avec succès",
+      badgeId: result.insertId,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la création du badge:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 // Routes d'authentification
 app.post("/api/auth/register", async (req, res) => {
   const { username, email, password } = req.body;
