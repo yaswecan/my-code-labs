@@ -693,55 +693,40 @@ const LessonExerciseEditor = () => {
                               ckfinder: {
                                 uploadUrl: '/api/upload-image'
                               },
-                              mediaEmbed: {
-                                previewsInData: true
-                              }
                             }}
                           />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Code initial
-                            </label>
-                            <textarea
-                              value={editForm.initialCode || ''}
-                              onChange={(e) => handleFormChange('initialCode', e.target.value)}
-                              rows={6}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Sortie attendue
-                            </label>
-                            <textarea
-                              value={editForm.expectedOutput || ''}
-                              onChange={(e) => handleFormChange('expectedOutput', e.target.value)}
-                              rows={6}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                            />
-                          </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Code initial
+                          </label>
+                          <textarea
+                            value={editForm.initialCode || ''}
+                            onChange={(e) => handleFormChange('initialCode', e.target.value)}
+                            rows={6}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                            placeholder="Code PHP initial..."
+                          />
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Indices
+                            Sortie attendue
                           </label>
                           <textarea
-                            value={editForm.hints?.join('\n') || ''}
-                            onChange={(e) => handleFormChange('hints', e.target.value.split('\n'))}
-                            rows={4}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Un indice par ligne..."
+                            value={editForm.expectedOutput || ''}
+                            onChange={(e) => handleFormChange('expectedOutput', e.target.value)}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                            placeholder="Résultat attendu..."
                           />
                         </div>
                       </>
                     )}
 
-                    {/* Boutons */}
-                    <div className="flex justify-end space-x-4">
+                    {/* Boutons de sauvegarde */}
+                    <div className="flex justify-end space-x-3 pt-4 border-t">
                       <button
                         onClick={handleCancel}
                         className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
@@ -760,231 +745,375 @@ const LessonExerciseEditor = () => {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* Aperçu */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Aperçu</h3>
-                      <div className="border rounded-lg p-4 bg-gray-50">
-                        <h4 className="font-semibold text-lg mb-2">{selectedItem.title}</h4>
-                        {selectedItem.type === 'lesson' ? (
-                          <div>
-                            <div
-                              className="prose max-w-none mb-4"
-                              dangerouslySetInnerHTML={{ __html: selectedItem.content }}
-                            />
-                            {selectedItem.question && (
-                              <div className="mt-4">
-                                <p className="font-medium">Question: {selectedItem.question}</p>
-                                {selectedItem.options && (
-                                  <ul className="mt-2 space-y-1">
-                                    {selectedItem.options.map((option, index) => (
-                                      <li key={index} className={`p-2 rounded ${
-                                        index === selectedItem.correctAnswer ? 'bg-green-100' : 'bg-white'
-                                      }`}>
-                                        {option}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="text-gray-600 mb-2">{selectedItem.description}</p>
-                            <div
-                              className="prose max-w-none mb-4"
-                              dangerouslySetInnerHTML={{ __html: selectedItem.instructions }}
-                            />
-                            <div className="bg-white p-4 rounded border">
-                              <h5 className="font-medium mb-2">Code initial:</h5>
-                              <pre className="text-sm bg-gray-100 p-2 rounded overflow-x-auto">
-                                {selectedItem.initialCode}
-                              </pre>
-                            </div>
-                          </div>
-                        )}
+                    {/* Affichage en lecture seule */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Titre
+                        </label>
+                        <p className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                          {selectedItem.title}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          ID
+                        </label>
+                        <p className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                          {selectedItem.id}
+                        </p>
                       </div>
                     </div>
+
+                    {/* Contenu pour leçons */}
+                    {selectedItem.type === 'lesson' && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Contenu
+                          </label>
+                          <div
+                            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md prose max-w-none"
+                            dangerouslySetInnerHTML={{ __html: selectedItem.content || '' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Question
+                          </label>
+                          <p className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                            {selectedItem.question || 'Aucune question'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Type de test
+                          </label>
+                          <p className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                            {selectedItem.testType === 'mcq' ? 'QCM' : 'Texte libre'}
+                          </p>
+                        </div>
+
+                        {selectedItem.testType === 'mcq' && selectedItem.options && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Options
+                            </label>
+                            {selectedItem.options.map((option, index) => (
+                              <div key={index} className="flex items-center mb-2">
+                                <input
+                                  type="radio"
+                                  checked={selectedItem.correctAnswer === index}
+                                  readOnly
+                                  className="mr-2"
+                                />
+                                <span className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md flex-1">
+                                  {option}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Contenu pour exercices */}
+                    {selectedItem.type === 'exercise' && (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Difficulté
+                            </label>
+                            <p className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                              {selectedItem.difficulty === 'beginner' ? 'Débutant' :
+                               selectedItem.difficulty === 'intermediate' ? 'Intermédiaire' : 'Avancé'}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Catégorie
+                            </label>
+                            <p className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                              {selectedItem.category || 'Non spécifiée'}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Description
+                            </label>
+                            <p className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                              {selectedItem.description || 'Aucune description'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Instructions
+                          </label>
+                          <div
+                            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md prose max-w-none"
+                            dangerouslySetInnerHTML={{ __html: selectedItem.instructions || '' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Code initial
+                          </label>
+                          <pre className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md overflow-x-auto text-sm">
+                            <code>{selectedItem.initialCode || 'Aucun code initial'}</code>
+                          </pre>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Sortie attendue
+                          </label>
+                          <pre className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md overflow-x-auto text-sm">
+                            <code>{selectedItem.expectedOutput || 'Aucune sortie attendue'}</code>
+                          </pre>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
+            ) : selectedTheme && !selectedPart ? (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Parties du thème: {selectedTheme.title}
+                  </h2>
+                  <button
+                    onClick={() => setShowNewPartModal(true)}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    + Nouvelle Partie
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {selectedTheme.parts.map(part => (
+                    <div
+                      key={part.id}
+                      onClick={() => handlePartSelect(part)}
+                      className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <h3 className="text-lg font-semibold text-gray-800">{part.title}</h3>
+                      <p className="text-gray-600">{part.content.length} élément(s)</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : selectedPart && !selectedItem ? (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Éléments de la partie: {selectedPart.title}
+                  </h2>
+                  <button
+                    onClick={() => setShowNewItemModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    + Ajouter un élément
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {selectedPart.content.map(item => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleItemSelect(item)}
+                      className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <span className={`inline-block w-3 h-3 rounded-full mr-3 ${
+                          item.type === 'lesson' ? 'bg-blue-500' : 'bg-green-500'
+                        }`}></span>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800">{item.title}</h3>
+                          <p className="text-gray-600">{item.type === 'lesson' ? 'Leçon' : 'Exercice'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-md p-12 text-center">
+              <div className="bg-white rounded-lg shadow-md p-6 text-center">
                 <div className="text-6xl mb-4">📝</div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                  Éditeur de Contenu
-                </h2>
-                <p className="text-gray-600">
-                  Sélectionnez un thème, une partie, puis une leçon ou un exercice pour commencer l'édition.
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  Sélectionnez un élément
+                </h3>
+                <p className="text-gray-500">
+                  Choisissez un thème, une partie et un élément dans le panneau de navigation pour commencer l'édition.
                 </p>
               </div>
             )}
           </div>
         </div>
+
+        {/* Modals */}
+        {/* Modal Nouveau Thème */}
+        {showNewThemeModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Nouveau Thème</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Titre
+                  </label>
+                  <input
+                    type="text"
+                    value={newThemeForm.title}
+                    onChange={(e) => setNewThemeForm(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Titre du thème"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={newThemeForm.description}
+                    onChange={(e) => setNewThemeForm(prev => ({ ...prev, description: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Description du thème"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowNewThemeModal(false);
+                    setNewThemeForm({ title: '', description: '' });
+                  }}
+                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleCreateTheme}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Créer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Nouvelle Partie */}
+        {showNewPartModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Nouvelle Partie</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Titre
+                  </label>
+                  <input
+                    type="text"
+                    value={newPartForm.title}
+                    onChange={(e) => setNewPartForm(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Titre de la partie"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowNewPartModal(false);
+                    setNewPartForm({ title: '' });
+                  }}
+                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleCreatePart}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Créer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Nouvel Élément */}
+        {showNewItemModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Nouvel Élément</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Type
+                  </label>
+                  <select
+                    value={newItemForm.type}
+                    onChange={(e) => setNewItemForm(prev => ({ ...prev, type: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="lesson">Leçon</option>
+                    <option value="exercise">Exercice</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Titre
+                  </label>
+                  <input
+                    type="text"
+                    value={newItemForm.title}
+                    onChange={(e) => setNewItemForm(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Titre de l'élément"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ID
+                  </label>
+                  <input
+                    type="text"
+                    value={newItemForm.id}
+                    onChange={(e) => setNewItemForm(prev => ({ ...prev, id: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="ID unique (ex: lesson1, exercise1)"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowNewItemModal(false);
+                    setNewItemForm({ type: 'lesson', title: '', id: '' });
+                  }}
+                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleCreateItem}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Créer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
-  );
-
-  // Modals
-  return (
-    <>
-      {/* Modal Nouveau Thème */}
-      {showNewThemeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Nouveau Thème</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Titre
-                </label>
-                <input
-                  type="text"
-                  value={newThemeForm.title}
-                  onChange={(e) => setNewThemeForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Titre du thème"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={newThemeForm.description}
-                  onChange={(e) => setNewThemeForm(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Description du thème"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowNewThemeModal(false);
-                  setNewThemeForm({ title: '', description: '' });
-                }}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleCreateTheme}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Créer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Nouvelle Partie */}
-      {showNewPartModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Nouvelle Partie</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Titre
-                </label>
-                <input
-                  type="text"
-                  value={newPartForm.title}
-                  onChange={(e) => setNewPartForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Titre de la partie"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowNewPartModal(false);
-                  setNewPartForm({ title: '' });
-                }}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleCreatePart}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Créer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Nouvel Élément */}
-      {showNewItemModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Nouvel Élément</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Type
-                </label>
-                <select
-                  value={newItemForm.type}
-                  onChange={(e) => setNewItemForm(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="lesson">Leçon</option>
-                  <option value="exercise">Exercice</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Titre
-                </label>
-                <input
-                  type="text"
-                  value={newItemForm.title}
-                  onChange={(e) => setNewItemForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Titre de l'élément"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ID
-                </label>
-                <input
-                  type="text"
-                  value={newItemForm.id}
-                  onChange={(e) => setNewItemForm(prev => ({ ...prev, id: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="ID unique (ex: lesson1, exercise1)"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowNewItemModal(false);
-                  setNewItemForm({ type: 'lesson', title: '', id: '' });
-                }}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleCreateItem}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Créer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
   );
 };
 

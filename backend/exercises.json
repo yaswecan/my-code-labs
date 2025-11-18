@@ -216,7 +216,7 @@
           ]
         }
       ],
-      "progress": 0
+      "progress": 10
     },
     {
       "id": "mysql-advanced",
@@ -623,7 +623,7 @@
               "type": "lesson",
               "id": "merise-mcd-to-mld",
               "title": "Règles de passage MCD → MLD",
-              "content": "Pour passer du MCD au MLD :\n- Chaque entité devient une table avec une clé primaire.\n- Les associations 1,N se traduisent par une clé étrangère dans la table du côté N.\n- Les associations N,N deviennent une table associative avec deux clés étrangères (souvent une table 'Ligne' comme ligne_commande).",
+              "content": "<p>Pour passer du MCD au MLD :&nbsp;</p><p>- Chaque entité devient une table avec une clé primaire.</p><p>- Les associations 1,N se traduisent par une clé étrangère dans la table du côté N.&nbsp;</p><p>- Les associations N,N deviennent une table associative avec deux clés étrangères (souvent une table 'Ligne' comme ligne_commande).</p>",
               "question": "Comment traduit-on une relation N,N entre deux entités au niveau du MLD ?",
               "options": [
                 "On fusionne les deux entités en une seule table",
@@ -715,7 +715,7 @@
           ]
         }
       ],
-      "progress": 0
+      "progress": 13
     }
   ]
 }
