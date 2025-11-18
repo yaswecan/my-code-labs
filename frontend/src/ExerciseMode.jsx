@@ -172,9 +172,9 @@ export default function ExerciseMode({ themeId, partId, onBack }) {
                   <h1 className="text-2xl font-bold text-gray-800">
                     {selectedExercise.title}
                   </h1>
-                  <p className="text-gray-600 mt-1">
-                    {selectedExercise.description}
-                  </p>
+                  <div className="text-gray-600 mt-1 prose prose-gray max-w-none">
+                    <div dangerouslySetInnerHTML={{ __html: selectedExercise.description }} />
+                  </div>
                 </div>
                 <button
                   onClick={testExercise}
@@ -192,7 +192,9 @@ export default function ExerciseMode({ themeId, partId, onBack }) {
               {/* Instructions */}
               <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                 <h3 className="font-semibold text-blue-800 mb-2">📝 Instructions</h3>
-                <p className="text-blue-700">{selectedExercise.instructions}</p>
+                <div className="text-blue-700 prose prose-blue max-w-none">
+                  <div dangerouslySetInnerHTML={{ __html: selectedExercise.instructions }} />
+                </div>
 
                 {selectedExercise.hints && selectedExercise.hints.length > 0 && (
                   <div className="mt-3">

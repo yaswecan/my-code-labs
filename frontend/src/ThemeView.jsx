@@ -34,10 +34,14 @@ export default function ThemeView() {
   const [selectedPart, setSelectedPart] = useState(null);
   const [showExerciseMode, setShowExerciseMode] = useState(false);
   const [badgeNotification, setBadgeNotification] = useState(null);
+  const [isReloading, setIsReloading] = useState(false);
   const { getAuthHeaders } = useAuth();
 
   // Fonction pour recharger les thèmes avec progression
   const reloadThemes = async () => {
+    if (isReloading) return; // Éviter les appels multiples simultanés
+
+    setIsReloading(true);
     try {
       const res = await fetch("/api/themes", {
         headers: getAuthHeaders()
@@ -77,11 +81,31 @@ export default function ThemeView() {
       if (selectedTheme) {
         const updatedTheme = data.find(t => t.id === selectedTheme.id);
         if (updatedTheme) {
-          await selectTheme(updatedTheme);
+          setSelectedTheme(updatedTheme);
+          // Recharger les parties si nécessaire
+          if (updatedTheme.parts) {
+            const partsWithProgress = await Promise.all(
+              updatedTheme.parts.map(async (part) => {
+                try {
+                  const response = await fetch(`/api/themes/${updatedTheme.id}/parts/${part.id}`, {
+                    headers: getAuthHeaders()
+                  });
+                  const partData = await response.json();
+                  return { ...part, progress: partData.progress };
+                } catch (error) {
+                  console.error(`Erreur chargement partie ${part.id}:`, error);
+                  return { ...part, progress: 0 };
+                }
+              })
+            );
+            setSelectedTheme({ ...updatedTheme, parts: partsWithProgress });
+          }
         }
       }
     } catch (err) {
       console.error("Erreur rechargement thèmes:", err);
+    } finally {
+      setIsReloading(false);
     }
   };
 
@@ -122,12 +146,18 @@ export default function ThemeView() {
       const allPartsComplete = partsWithProgress.every(part => part.progress === 100);
       if (allPartsComplete) {
         // Recharger les thèmes pour mettre à jour les badges potentiellement gagnés
-        setTimeout(() => reloadThemes(), 1000);
+        setTimeout(() => {
+          if (!isReloading) {
+            reloadThemes();
+          }
+        }, 1000);
       }
     }
   };
 
   const selectPart = async (part) => {
+    setShowExerciseMode(false);
+
     // Recharger la partie avec sa progression complète
     try {
       const response = await fetch(`/api/themes/${selectedTheme.id}/parts/${part.id}`, {
@@ -139,7 +169,6 @@ export default function ThemeView() {
       console.error(`Erreur chargement partie ${part.id}:`, error);
       setSelectedPart(part);
     }
-    setShowExerciseMode(false);
   };
 
   const startLearning = (startIndex = 0) => {
@@ -156,8 +185,8 @@ export default function ThemeView() {
         onBack={() => {
           setShowExerciseMode(false);
           // Recharger les thèmes pour mettre à jour la progression
-          reloadThemes();
-        }} 
+          setTimeout(() => reloadThemes(), 100);
+        }}
       />
     );
   }

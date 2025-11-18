@@ -90,12 +90,13 @@ export default function LearningMode({ themeId, partId, onBack, startIndex = 0 }
     if (!currentItem) return;
 
     const answer = currentItem.testType === "mcq" ? selectedOption : lessonAnswer.trim();
-    if (!answer) return;
+    if (currentItem.testType === "mcq" && selectedOption === null) return;
+    if (currentItem.testType === "text" && !lessonAnswer.trim()) return;
 
     try {
       const res = await fetch("/api/test-lesson", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           ...getAuthHeaders()
         },
@@ -307,9 +308,10 @@ export default function LearningMode({ themeId, partId, onBack, startIndex = 0 }
                   <div className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                       <div className="prose prose-gray max-w-none">
-                        <p className="text-gray-700 leading-relaxed mb-6">
-                          {currentItem.content}
-                        </p>
+                        <div
+                          className="text-gray-700 leading-relaxed mb-6"
+                          dangerouslySetInnerHTML={{ __html: currentItem.content }}
+                        />
                       </div>
 
                       <div className="border-t border-gray-200 pt-6">
@@ -405,7 +407,9 @@ export default function LearningMode({ themeId, partId, onBack, startIndex = 0 }
                   {/* Instructions */}
                   <div className="bg-blue-50 border-b border-blue-200 p-4">
                     <h3 className="font-semibold text-blue-800 mb-2">📝 Instructions</h3>
-                    <p className="text-blue-700">{currentItem.instructions}</p>
+                    <div className="text-blue-700 prose prose-blue max-w-none">
+                      <div dangerouslySetInnerHTML={{ __html: currentItem.instructions }} />
+                    </div>
 
                     {currentItem.hints && currentItem.hints.length > 0 && (
                       <div className="mt-3">

@@ -7,6 +7,7 @@ import { promisify } from "util";
 import sanitizeHtml from "sanitize-html";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import zlib from "zlib";
+import fileUpload from "express-fileupload";
 import { pool, initDB } from "./db.js";
 import {
   authenticateToken,
@@ -24,8 +25,8 @@ import {
 const execPromise = promisify(exec);
 
 // Charger les exercices
-const exerciseData = JSON.parse(fs.readFileSync("./exercises.json", "utf8"));
-const exercises = exerciseData.themes
+let exerciseData = JSON.parse(fs.readFileSync("./exercises.json", "utf8"));
+let exercises = exerciseData.themes
   ? exerciseData.themes.flatMap((theme) =>
       theme.parts.flatMap(
         (part) => part.content?.filter((item) => item.type === "exercise") || []
@@ -36,6 +37,12 @@ const exercises = exerciseData.themes
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(
+  fileUpload({
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+    abortOnLimit: true,
+  })
+);
 
 // Proxy pour phpMyAdmin - doit être avant les autres routes
 const phpMyAdminProxy = createProxyMiddleware({
@@ -71,8 +78,11 @@ app.use(
   phpMyAdminProxy
 );
 
+// Servir les images statiques
+app.use("/api/images", express.static(path.join(process.cwd(), "images")));
+
 // Dossier temporaire pour les fichiers PHP (doit être monté via Docker)
-const TMP_DIR = "/app/sandbox";
+const TMP_DIR = path.join(process.cwd(), "sandbox");
 
 // Crée le dossier sandbox si nécessaire (dans le conteneur backend)
 if (!fs.existsSync(TMP_DIR)) {
@@ -691,6 +701,57 @@ app.post("/api/run-project", async (req, res) => {
   }
 });
 
+// Endpoint pour uploader des images
+app.post(
+  "/api/upload-image",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    try {
+      if (!req.files || !req.files.image) {
+        return res.status(400).json({ error: "Aucune image fournie" });
+      }
+
+      const image = req.files.image;
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (!allowedTypes.includes(image.mimetype)) {
+        return res.status(400).json({ error: "Type de fichier non autorisé" });
+      }
+
+      if (image.size > maxSize) {
+        return res
+          .status(400)
+          .json({ error: "Fichier trop volumineux (max 5MB)" });
+      }
+
+      // Générer un nom unique
+      const ext = path.extname(image.name);
+      const fileName = `upload_${Date.now()}_${Math.random()
+        .toString(36)
+        .substr(2, 9)}${ext}`;
+      const filePath = path.join(process.cwd(), "images", fileName);
+
+      // Déplacer le fichier
+      await image.mv(filePath);
+
+      res.json({
+        url: `/api/images/${fileName}`,
+        message: "Image uploadée avec succès",
+      });
+    } catch (error) {
+      console.error("Erreur upload image:", error);
+      res.status(500).json({ error: "Erreur lors de l'upload" });
+    }
+  }
+);
+
 // Endpoint pour récupérer les badges d'un utilisateur
 app.get("/api/user/badges", authenticateToken, async (req, res) => {
   const userId = req.user.id;
@@ -933,7 +994,11 @@ app.post("/api/test-lesson", authenticateToken, async (req, res) => {
   }
 
   if (!foundLesson) {
-    return res.status(404).json({ error: "Lesson not found" });
+    return res.json({
+      passed: false,
+      message: "❌ Leçon non trouvée",
+      correct: false,
+    });
   }
 
   let testResult = { passed: false, message: "", correct: false };
@@ -1372,6 +1437,37 @@ app.get(
     }
   }
 );
+
+// Endpoint pour sauvegarder les thèmes (éditeur)
+app.put("/api/themes", authenticateToken, requireTeacher, async (req, res) => {
+  try {
+    const { themes } = req.body;
+
+    if (!themes || !Array.isArray(themes)) {
+      return res.status(400).json({ error: "Données themes invalides" });
+    }
+
+    // Sauvegarder dans exercises.json
+    const exercisesPath = path.join(process.cwd(), "exercises.json");
+    fs.writeFileSync(exercisesPath, JSON.stringify({ themes }, null, 2));
+
+    // Recharger les données en mémoire
+    exerciseData = JSON.parse(fs.readFileSync("./exercises.json", "utf8"));
+    exercises = exerciseData.themes
+      ? exerciseData.themes.flatMap((theme) =>
+          theme.parts.flatMap(
+            (part) =>
+              part.content?.filter((item) => item.type === "exercise") || []
+          )
+        )
+      : [];
+
+    res.json({ message: "Thèmes sauvegardés avec succès" });
+  } catch (error) {
+    console.error("Erreur sauvegarde thèmes:", error);
+    res.status(500).json({ error: "Erreur lors de la sauvegarde" });
+  }
+});
 
 app.listen(4000, () => {
   console.log("🚀 Backend running on http://localhost:4000");

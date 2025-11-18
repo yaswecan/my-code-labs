@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext.jsx';
+import LessonExerciseEditor from './LessonExerciseEditor.jsx';
 
 // Mapping des exercices et leçons vers leurs thèmes
 const exerciseToTheme = {
@@ -37,6 +38,7 @@ const TeacherDashboard = () => {
   const [studentBadges, setStudentBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     loadOverview();
@@ -159,8 +161,37 @@ const TeacherDashboard = () => {
           Tableau de Bord Enseignant
         </h1>
 
-        {/* Aperçu général */}
-        {overview && (
+        {/* Onglets */}
+        <div className="mb-8">
+          <nav className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'overview'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              📊 Aperçu Classe
+            </button>
+            <button
+              onClick={() => setActiveTab('content')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'content'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              ✏️ Gestion du Contenu
+            </button>
+          </nav>
+        </div>
+
+        {/* Contenu des onglets */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Aperçu général */}
+            {overview && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 className="text-xl font-semibold mb-4">Aperçu de la Classe</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -444,6 +475,12 @@ const TeacherDashboard = () => {
               });
             })()}
           </div>
+        )}
+          </>
+        )}
+
+        {activeTab === 'content' && (
+          <LessonExerciseEditor />
         )}
       </div>
     </div>
