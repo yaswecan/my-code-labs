@@ -334,7 +334,7 @@ console.log('Script loaded successfully!');`,
                 className="mr-1 text-xs hover:text-blue-400"
                 title="Renommer"
               >
-                ✏️
+                 
               </button>
               <button
                 onClick={() => deleteFile(file.id)}

@@ -144,7 +144,7 @@ L'éditeur se compose de:
 **Barre d'Onglets** (en haut)
 
 - Cliquez sur un onglet pour ouvrir un fichier
-- ✏️ pour renommer
+- pour renommer
 - ✕ pour supprimer
 - **+ Nouveau fichier** pour créer
 
@@ -273,7 +273,7 @@ Voir [TESTS_MULTI_FILES.md](TESTS_MULTI_FILES.md) pour le rapport complet.
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 - **[MULTI_FILES_GUIDE.md](MULTI_FILES_GUIDE.md)** - Guide complet du système multi-fichiers
 - **[GUIDE_UTILISATION.md](GUIDE_UTILISATION.md)** - Guide utilisateur avec exemples
@@ -411,7 +411,7 @@ npm install <package>
 
 ---
 
-## 📊 Performances
+## Performances
 
 | Métrique                 | Valeur  |
 | ------------------------ | ------- |

@@ -39,11 +39,11 @@ Le nouvel éditeur multi-fichiers permet de créer des projets PHP complets avec
 #### Barre d'Onglets (en haut)
 
 ```
-[index.php ✏️ ✕] [style.css ✏️ ✕] [script.js ✏️ ✕] [+ Nouveau fichier]
+[index.php   ✕] [style.css   ✕] [script.js   ✕] [+ Nouveau fichier]
 ```
 
 - **Cliquer sur un onglet**: Ouvrir le fichier
-- **✏️ (Renommer)**: Changer le nom du fichier
+- ** (Renommer)**: Changer le nom du fichier
 - **✕ (Supprimer)**: Supprimer le fichier
 - **+ Nouveau fichier**: Créer un nouveau fichier
 
@@ -510,7 +510,7 @@ include '/var/www/functions.php';
 
 ---
 
-## 📚 Exemples Prêts à l'Emploi
+## Exemples Prêts à l'Emploi
 
 L'éditeur charge automatiquement un projet exemple avec:
 

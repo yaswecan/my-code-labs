@@ -1,4 +1,4 @@
-# 📊 Rapport de Tests Complets - Éditeur PHP avec Rendu HTML/CSS
+# Rapport de Tests Complets - Éditeur PHP avec Rendu HTML/CSS
 
 **Date**: 27 octobre 2025  
 **Version**: 1.0  
@@ -477,7 +477,7 @@ sandbox = "allow-scripts allow-same-origin";
 
 ---
 
-## 📊 Métriques de Performance
+## Métriques de Performance
 
 | Métrique             | Valeur      | Statut       |
 | -------------------- | ----------- | ------------ |

@@ -23,7 +23,7 @@ Créer un système permettant de gérer plusieurs fichiers (PHP, CSS, JS, HTML) 
 - ✅ Système d'onglets pour navigation entre fichiers
 - ✅ Création de nouveaux fichiers (bouton + Nouveau fichier)
 - ✅ Suppression de fichiers (bouton ✕)
-- ✅ Renommage de fichiers (bouton ✏️)
+- ✅ Renommage de fichiers (bouton )
 - ✅ Détection automatique du langage selon l'extension
 - ✅ Éditeur Monaco avec coloration syntaxique
 - ✅ Bouton "Exécuter le Projet"
@@ -150,7 +150,7 @@ Chaque exécution crée un dossier unique:
 
 ---
 
-## 📊 Tests Effectués
+## Tests Effectués
 
 ### Tests Backend (5/5 réussis)
 
@@ -238,7 +238,7 @@ Chaque exécution crée un dossier unique:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ [index.php ✏️ ✕] [style.css ✏️ ✕] [+ Nouveau fichier]  │ ← Onglets
+│ [index.php   ✕] [style.css   ✕] [+ Nouveau fichier]  │ ← Onglets
 ├─────────────────────────────────────────────────────────┤
 │                                                          │
 │                   Monaco Editor                          │ ← Éditeur
@@ -257,7 +257,7 @@ Chaque exécution crée un dossier unique:
 ### Interactions
 
 - **Clic sur onglet**: Ouvrir le fichier
-- **✏️**: Renommer le fichier
+- \*\* \*\*: Renommer le fichier
 - **✕**: Supprimer le fichier (avec confirmation)
 - **+ Nouveau fichier**: Créer un nouveau fichier
 - **▶ Exécuter**: Lancer l'exécution du projet
@@ -338,7 +338,7 @@ index.php (include 'header.php', 'footer.php')
 
 ---
 
-## 📚 Documentation Créée
+## Documentation Créée
 
 1. **README.md** - Documentation principale
 2. **MULTI_FILES_GUIDE.md** - Guide détaillé avec 8 exemples

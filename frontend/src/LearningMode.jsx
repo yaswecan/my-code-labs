@@ -190,7 +190,7 @@ export default function LearningMode({ themeId, partId, onBack, startIndex = 0 }
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">📚 Apprentissage</h2>
+              <h2 className="text-xl font-bold text-gray-800">  Apprentissage</h2>
               <p className="text-sm text-gray-600 mt-1">
                 {part.title}
               </p>
@@ -484,7 +484,7 @@ export default function LearningMode({ themeId, partId, onBack, startIndex = 0 }
                     {/* Résultats du test */}
                     <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
                       <div className="p-4 border-b border-gray-200">
-                        <h3 className="font-semibold text-gray-800">📊 Résultats du Test</h3>
+                        <h3 className="font-semibold text-gray-800">   Résultats du Test</h3>
                       </div>
 
                       {/* Bouton Tester - toujours visible en haut */}

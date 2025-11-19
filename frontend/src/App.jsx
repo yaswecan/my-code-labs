@@ -29,9 +29,9 @@ function App() {
     return (
       <div className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
-          <div className="text-6xl mb-6">📚</div>
+          <div className="text-6xl mb-6"> </div>
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            PHP Learning Platform
+            Codex
           </h1>
           <p className="text-xl text-gray-600 mb-8">
             Apprenez PHP de manière interactive
@@ -79,7 +79,7 @@ function App() {
     <div className="App h-screen overflow-hidden">
       {/* Navigation */}
       <div className="bg-gray-800 text-white p-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold">PHP Learning Platform</h1>
+        <h1 className="text-xl font-bold">Codex</h1>
         <div className="flex items-center space-x-4">
           <button
             onClick={() => setMode("editor")}
@@ -119,7 +119,7 @@ function App() {
                 : "bg-gray-600 hover:bg-gray-700"
             }`}
           >
-            🏆 Mes Badges
+               Mes Badges
           </button>
           {user.role === "teacher" && (
             <button

@@ -6,7 +6,7 @@
 
 ---
 
-## 📊 Résumé Exécutif
+## Résumé Exécutif
 
 Le système multi-fichiers a été implémenté et testé avec succès. Toutes les fonctionnalités principales fonctionnent correctement:
 
@@ -247,7 +247,7 @@ Le système multi-fichiers a été implémenté et testé avec succès. Toutes l
 #### 2. Gestion des Fichiers ✅
 
 - ✅ Bouton "Nouveau fichier"
-- ✅ Bouton "Renommer" (✏️) par fichier
+- ✅ Bouton "Renommer" ( ) par fichier
 - ✅ Bouton "Supprimer" (✕) par fichier
 - ✅ Protection: minimum 1 fichier requis
 - ✅ Confirmation avant suppression
@@ -332,7 +332,7 @@ Le système multi-fichiers a été implémenté et testé avec succès. Toutes l
 
 ---
 
-## 📊 Métriques de Performance
+## Métriques de Performance
 
 | Métrique                 | Valeur  | Statut       |
 | ------------------------ | ------- | ------------ |

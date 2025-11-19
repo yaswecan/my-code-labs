@@ -117,7 +117,7 @@ export default function BadgesView() {
         {/* En-tête */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {user?.role === 'teacher' ? '🏆 Gestion des Badges' : '🏆 Mes Badges'}
+            {user?.role === 'teacher' ? '   Gestion des Badges' : '   Mes Badges'}
           </h1>
           <p className="text-gray-600">
             {user?.role === 'teacher'
@@ -154,7 +154,7 @@ export default function BadgesView() {
                         value={editForm.icon}
                         onChange={(e) => setEditForm({...editForm, icon: e.target.value})}
                         className="w-full p-2 border rounded"
-                        placeholder="🏆"
+                        placeholder="  "
                       />
                     </div>
                     <div>
@@ -214,7 +214,7 @@ export default function BadgesView() {
                             value={editForm.icon}
                             onChange={(e) => setEditForm({...editForm, icon: e.target.value})}
                             className="w-full p-2 border rounded"
-                            placeholder="🏆"
+                            placeholder="  "
                           />
                         </div>
                         <div>
@@ -337,7 +337,7 @@ export default function BadgesView() {
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                <div className="text-6xl mb-4">🏆</div>
+                <div className="text-6xl mb-4">  </div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-2">
                   Aucun badge pour le moment
                 </h2>

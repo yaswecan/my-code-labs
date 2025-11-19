@@ -6,7 +6,7 @@
 
 ---
 
-## 📊 Résumé Exécutif
+## Résumé Exécutif
 
 **Taux de Réussite Global**: 100% (8/8 tests)
 
@@ -384,7 +384,7 @@ monaco-db-1         Up    0.0.0.0:5432->5432/tcp
 
 ---
 
-## 📊 Tableau Récapitulatif
+## Tableau Récapitulatif
 
 | Catégorie      | Tests  | Réussis | Taux     |
 | -------------- | ------ | ------- | -------- |

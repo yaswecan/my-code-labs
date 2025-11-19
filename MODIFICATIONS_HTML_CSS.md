@@ -221,7 +221,7 @@ sandbox = "allow-scripts allow-same-origin";
 
 ---
 
-## 📊 Avantages
+## Avantages
 
 ✅ **Automatique**: Détection HTML sans configuration  
 ✅ **Sécurisé**: Isolation via iframe sandbox  

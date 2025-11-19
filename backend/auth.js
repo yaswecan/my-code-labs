@@ -334,7 +334,7 @@ export async function checkAndAwardThemeBadges(userId, themeId) {
         );
 
         console.log(
-          `🏆 Badge "${theme.title}" attribué à l'utilisateur ${userId}`
+          `   Badge "${theme.title}" attribué à l'utilisateur ${userId}`
         );
         return true;
       }

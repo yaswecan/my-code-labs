@@ -14,7 +14,7 @@ function BadgeNotification({ badge, onClose }) {
       <div className="flex items-center space-x-3">
         <div className="text-2xl">{badge.icon}</div>
         <div>
-          <h3 className="font-bold">🏆 Nouveau badge obtenu !</h3>
+          <h3 className="font-bold">   Nouveau badge obtenu !</h3>
           <p className="text-sm">{badge.name}</p>
         </div>
         <button
@@ -204,7 +204,7 @@ export default function ThemeView() {
       {/* Sidebar avec la liste des thèmes */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">📚 Thèmes PHP</h2>
+          <h2 className="text-xl font-bold text-gray-800">  Thèmes PHP</h2>
           <p className="text-sm text-gray-600 mt-1">
             Apprenez PHP étape par étape
           </p>
@@ -305,7 +305,7 @@ export default function ThemeView() {
                         </div>
                         <div className="ml-4">
                           <div className="text-2xl">
-                            {selectedPart?.id === part.id ? "📖" : "📚"}
+                            {selectedPart?.id === part.id ? "📖" : " "}
                           </div>
                         </div>
                       </div>
@@ -456,7 +456,7 @@ export default function ThemeView() {
           /* Écran d'accueil */
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-6xl mb-4">📚</div>
+              <div className="text-6xl mb-4"> </div>
               <h1 className="text-3xl font-bold text-gray-800 mb-4">
                 Thèmes d'Apprentissage PHP
               </h1>

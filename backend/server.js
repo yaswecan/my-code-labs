@@ -833,7 +833,7 @@ app.put(
     try {
       await pool.execute(
         "UPDATE badges SET name = ?, description = ?, icon = ?, updated_at = NOW() WHERE id = ?",
-        [name, description || null, icon || "🏆", badgeId]
+        [name, description || null, icon || "  ", badgeId]
       );
 
       res.json({ message: "Badge mis à jour avec succès" });
@@ -873,7 +873,7 @@ app.post("/api/badges", authenticateToken, requireTeacher, async (req, res) => {
 
     const [result] = await pool.execute(
       "INSERT INTO badges (badge_key, name, description, icon) VALUES (?, ?, ?, ?)",
-      [badgeKey, name, description || null, icon || "🏆"]
+      [badgeKey, name, description || null, icon || "  "]
     );
 
     res.status(201).json({
@@ -1273,9 +1273,235 @@ app.get("/api/user/database-info", authenticateToken, async (req, res) => {
   }
 });
 
+// Routes pour les classes
+
+// Endpoint pour récupérer les classes d'un enseignant
+app.get("/api/classes", authenticateToken, requireTeacher, async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const [rows] = await pool.execute(
+      "SELECT id, name, description, created_at FROM classes WHERE teacher_id = ? ORDER BY created_at DESC",
+      [teacherId]
+    );
+
+    res.json(rows);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des classes:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Endpoint pour créer une nouvelle classe
+app.post(
+  "/api/classes",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    const { name, description } = req.body;
+    const teacherId = req.user.id;
+
+    if (!name) {
+      return res.status(400).json({ error: "Le nom de la classe est requis" });
+    }
+
+    try {
+      const [result] = await pool.execute(
+        "INSERT INTO classes (name, description, teacher_id) VALUES (?, ?, ?)",
+        [name, description || null, teacherId]
+      );
+
+      res.status(201).json({
+        message: "Classe créée avec succès",
+        classId: result.insertId,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la création de la classe:", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// Endpoint pour récupérer les élèves d'une classe
+app.get(
+  "/api/classes/:classId/students",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    const { classId } = req.params;
+    const teacherId = req.user.id;
+
+    try {
+      // Vérifier que la classe appartient à l'enseignant
+      const [classCheck] = await pool.execute(
+        "SELECT id FROM classes WHERE id = ? AND teacher_id = ?",
+        [classId, teacherId]
+      );
+
+      if (classCheck.length === 0) {
+        return res.status(404).json({ error: "Classe non trouvée" });
+      }
+
+      const [rows] = await pool.execute(
+        "SELECT id, username, email, created_at FROM users WHERE class_id = ? AND role = 'student' ORDER BY created_at DESC",
+        [classId]
+      );
+
+      res.json(rows);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des élèves:", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// Endpoint pour assigner des élèves à une classe
+app.put(
+  "/api/classes/:classId/students",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    const { classId } = req.params;
+    const { studentIds } = req.body;
+    const teacherId = req.user.id;
+
+    if (!Array.isArray(studentIds)) {
+      return res.status(400).json({ error: "Liste d'élèves requise" });
+    }
+
+    try {
+      // Vérifier que la classe appartient à l'enseignant
+      const [classCheck] = await pool.execute(
+        "SELECT id FROM classes WHERE id = ? AND teacher_id = ?",
+        [classId, teacherId]
+      );
+
+      if (classCheck.length === 0) {
+        return res.status(404).json({ error: "Classe non trouvée" });
+      }
+
+      // Mettre à jour les élèves
+      await pool.execute(
+        "UPDATE users SET class_id = NULL WHERE class_id = ? AND role = 'student'",
+        [classId]
+      );
+
+      if (studentIds.length > 0) {
+        const placeholders = studentIds.map(() => "?").join(",");
+        await pool.execute(
+          `UPDATE users SET class_id = ? WHERE id IN (${placeholders}) AND role = 'student'`,
+          [classId, ...studentIds]
+        );
+      }
+
+      res.json({ message: "Élèves assignés avec succès" });
+    } catch (error) {
+      console.error("Erreur lors de l'assignation des élèves:", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// Endpoint pour récupérer l'aperçu d'une classe
+app.get(
+  "/api/classes/:classId/overview",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    const { classId } = req.params;
+    const teacherId = req.user.id;
+
+    try {
+      // Vérifier que la classe appartient à l'enseignant
+      const [classCheck] = await pool.execute(
+        "SELECT id, name FROM classes WHERE id = ? AND teacher_id = ?",
+        [classId, teacherId]
+      );
+
+      if (classCheck.length === 0) {
+        return res.status(404).json({ error: "Classe non trouvée" });
+      }
+
+      // Récupérer les élèves de la classe
+      const [students] = await pool.execute(
+        "SELECT id, username FROM users WHERE class_id = ? AND role = 'student'",
+        [classId]
+      );
+
+      // Calculer les statistiques pour chaque élève
+      const studentStats = await Promise.all(
+        students.map(async (student) => {
+          // Calculer la progression par thème pour chaque élève
+          const themesWithProgress = await Promise.all(
+            (exerciseData.themes || []).map(async (theme) => {
+              const progress = await getThemeProgress(student.id, theme);
+              return {
+                id: theme.id,
+                title: theme.title,
+                progress,
+              };
+            })
+          );
+
+          // Calculer la progression globale comme moyenne des thèmes
+          const totalThemes = themesWithProgress.length;
+          const averageThemeProgress =
+            totalThemes > 0
+              ? Math.round(
+                  themesWithProgress.reduce(
+                    (sum, theme) => sum + theme.progress,
+                    0
+                  ) / totalThemes
+                )
+              : 0;
+
+          const [exerciseProgress] = await pool.execute(
+            "SELECT COUNT(*) as total, SUM(completed) as completed FROM progress WHERE user_id = ?",
+            [student.id]
+          );
+
+          const [lessonProgress] = await pool.execute(
+            "SELECT COUNT(*) as total, SUM(completed) as completed FROM lesson_progress WHERE user_id = ?",
+            [student.id]
+          );
+
+          return {
+            id: student.id,
+            username: student.username,
+            totalExercises: exerciseProgress[0].total,
+            completedExercises: exerciseProgress[0].completed || 0,
+            totalLessons: lessonProgress[0].total,
+            completedLessons: lessonProgress[0].completed || 0,
+            progress: averageThemeProgress,
+          };
+        })
+      );
+
+      // Statistiques globales de la classe
+      const totalStudents = students.length;
+      const averageProgress =
+        studentStats.length > 0
+          ? Math.round(
+              studentStats.reduce((sum, s) => sum + s.progress, 0) /
+                studentStats.length
+            )
+          : 0;
+
+      res.json({
+        class: { id: classCheck[0].id, name: classCheck[0].name },
+        totalStudents,
+        averageProgress,
+        students: studentStats,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'aperçu:", error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
 // Routes pour les enseignants
 
-// Endpoint pour récupérer la liste des élèves
+// Endpoint pour récupérer la liste des élèves (tous les élèves pour assignation)
 app.get(
   "/api/teacher/students",
   authenticateToken,
@@ -1283,7 +1509,7 @@ app.get(
   async (req, res) => {
     try {
       const [rows] = await pool.execute(
-        "SELECT id, username, email, created_at FROM users WHERE role = 'student' ORDER BY created_at DESC"
+        "SELECT id, username, email, class_id, created_at FROM users WHERE role = 'student' ORDER BY created_at DESC"
       );
 
       res.json(rows);
@@ -1499,6 +1725,6 @@ app.put("/api/themes", authenticateToken, requireTeacher, async (req, res) => {
 
 app.listen(4000, () => {
   console.log("🚀 Backend running on http://localhost:4000");
-  console.log(`📚 ${exercises.length} exercises loaded`);
+  console.log(`  ${exercises.length} exercises loaded`);
   console.log("🗄️  phpMyAdmin disponible sur http://localhost:8080");
 });

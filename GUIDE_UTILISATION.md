@@ -355,7 +355,7 @@ echo $html;
 
 ---
 
-## 📚 Ressources
+## Ressources
 
 - [Documentation PHP](https://www.php.net/manual/fr/)
 - [HTML Reference](https://developer.mozilla.org/fr/docs/Web/HTML)

@@ -90,7 +90,7 @@ async function initDB() {
         badge_key VARCHAR(100) UNIQUE NOT NULL,
         name VARCHAR(255) NOT NULL,
         description TEXT,
-        icon VARCHAR(50) DEFAULT '🏆',
+        icon VARCHAR(50) DEFAULT '  ',
         theme_id VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -110,6 +110,32 @@ async function initDB() {
       )
     `);
 
+    // Créer la table classes
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS classes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        teacher_id INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Ajouter la colonne class_id à la table users si elle n'existe pas
+    try {
+      await connection.execute(`
+        ALTER TABLE users ADD COLUMN class_id INT NULL,
+        ADD CONSTRAINT fk_users_class_id FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL
+      `);
+    } catch (error) {
+      // La colonne existe déjà, ignorer l'erreur
+      if (!error.message.includes("Duplicate column name")) {
+        throw error;
+      }
+    }
+
     // Insérer les badges par défaut pour chaque thème
     const exerciseData = JSON.parse(
       await fs.readFileSync("./exercises.json", "utf8")
@@ -125,7 +151,7 @@ async function initDB() {
             `theme_${theme.id}`,
             `Maître ${theme.title}`,
             `A complété entièrement le thème "${theme.title}"`,
-            "🏆",
+            "  ",
             theme.id,
           ]
         );
