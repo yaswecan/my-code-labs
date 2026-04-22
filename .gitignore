@@ -3,3 +3,5 @@
 /sandbox
 .DS_Store
 /frontend/.DS_Store
+*.env
+!*.env.example
