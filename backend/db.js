@@ -138,7 +138,7 @@ async function initDB() {
 
     // Insérer les badges par défaut pour chaque thème
     const exerciseData = JSON.parse(
-      await fs.readFileSync("./exercises.json", "utf8")
+      await fs.readFileSync("./exercises.json", "utf8"),
     );
     if (exerciseData.themes) {
       for (const theme of exerciseData.themes) {
@@ -153,7 +153,7 @@ async function initDB() {
             `A complété entièrement le thème "${theme.title}"`,
             "  ",
             theme.id,
-          ]
+          ],
         );
       }
     }
@@ -163,7 +163,7 @@ async function initDB() {
   } catch (error) {
     console.error(
       "❌ Erreur lors de l'initialisation de la base de données:",
-      error
+      error,
     );
     throw error;
   }
@@ -181,10 +181,10 @@ async function createStudentDatabase(userId, username) {
 
     // Créer l'utilisateur et lui donner tous les privilèges sur sa base
     await adminPool.execute(
-      `CREATE USER IF NOT EXISTS '${dbUser}'@'%' IDENTIFIED BY '${dbPassword}'`
+      `CREATE USER IF NOT EXISTS '${dbUser}'@'%' IDENTIFIED BY '${dbPassword}'`,
     );
     await adminPool.execute(
-      `GRANT ALL PRIVILEGES ON \`${dbName}\`.* TO '${dbUser}'@'%'`
+      `GRANT ALL PRIVILEGES ON \`${dbName}\`.* TO '${dbUser}'@'%'`,
     );
     await adminPool.execute(`FLUSH PRIVILEGES`);
 
@@ -200,7 +200,7 @@ async function createStudentDatabase(userId, username) {
   } catch (error) {
     console.error(
       `❌ Erreur lors de la création de la base de données pour ${username}:`,
-      error
+      error,
     );
     throw error;
   }
