@@ -1501,6 +1501,56 @@ app.get(
 
 // Routes pour les enseignants
 
+// Endpoint pour créer un élève (pour les enseignants)
+app.post(
+  "/api/teacher/students",
+  authenticateToken,
+  requireTeacher,
+  async (req, res) => {
+    const { username, email, password, classId } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: "Tous les champs sont requis" });
+    }
+
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ error: "Le mot de passe doit contenir au moins 6 caractères" });
+    }
+
+    try {
+      // Créer l'utilisateur avec le rôle 'student'
+      const user = await createUser(username, email, password, "student");
+
+      // Assigner à la classe si spécifiée
+      if (classId) {
+        await pool.execute("UPDATE users SET class_id = ? WHERE id = ?", [
+          classId,
+          user.id,
+        ]);
+      }
+
+      res.status(201).json({
+        message: "Élève créé avec succès",
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          class_id: classId,
+        },
+      });
+    } catch (error) {
+      console.error("Erreur lors de la création de l'élève:", error);
+      res
+        .status(500)
+        .json({
+          error: error.message || "Erreur lors de la création de l'élève",
+        });
+    }
+  }
+);
+
 // Endpoint pour récupérer la liste des élèves (tous les élèves pour assignation)
 app.get(
   "/api/teacher/students",

@@ -94,6 +94,122 @@ const CreateClassModal = ({ isOpen, onClose, onClassCreated }) => {
   );
 };
 
+// Composant pour créer un élève
+const CreateStudentModal = ({ isOpen, onClose, classData, onStudentCreated }) => {
+  const { getAuthHeaders } = useAuth();
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!username.trim() || !email.trim() || !password.trim()) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/teacher/students', {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: username.trim(),
+          email: email.trim(),
+          password: password.trim(),
+          classId: classData?.id
+        }),
+      });
+
+      if (response.ok) {
+        setUsername('');
+        setEmail('');
+        setPassword('');
+        onClose();
+        onStudentCreated();
+      } else {
+        const error = await response.json();
+        console.error('Erreur lors de la création de l\'élève:', error);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">
+          Créer un élève{classData ? ` - ${classData.name}` : ''}
+        </h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nom d'utilisateur *
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ex: jean.dupont"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email *
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="jean.dupont@ecole.fr"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mot de passe *
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Minimum 6 caractères"
+              minLength={6}
+              required
+            />
+          </div>
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !username.trim() || !email.trim() || !password.trim()}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              {loading ? 'Création...' : 'Créer élève'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Composant pour gérer les élèves d'une classe
 const ManageClassStudentsModal = ({ isOpen, onClose, classData, onStudentsUpdated }) => {
   const { getAuthHeaders } = useAuth();
@@ -256,6 +372,7 @@ const TeacherDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showCreateClassModal, setShowCreateClassModal] = useState(false);
   const [showManageStudentsModal, setShowManageStudentsModal] = useState(false);
+  const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
   const [classToManage, setClassToManage] = useState(null);
 
   useEffect(() => {
@@ -564,7 +681,12 @@ const TeacherDashboard = () => {
                     <div className="text-gray-600">Progression moyenne</div>
                   </div>
                   <div className="text-center">
-                    <ProgressBar progress={classOverviews[selectedClass.id].averageProgress} />
+                    <button
+                      onClick={() => setShowCreateStudentModal(true)}
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      + Créer élève
+                    </button>
                   </div>
                 </div>
 
@@ -1125,6 +1247,16 @@ const TeacherDashboard = () => {
           onStudentsUpdated={() => {
             loadClasses();
             loadOverview();
+          }}
+        />
+
+        <CreateStudentModal
+          isOpen={showCreateStudentModal}
+          onClose={() => setShowCreateStudentModal(false)}
+          classData={selectedClass}
+          onStudentCreated={() => {
+            loadClassOverview(selectedClass.id);
+            loadStudents();
           }}
         />
       </div>
